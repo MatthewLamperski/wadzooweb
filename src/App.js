@@ -1,24 +1,36 @@
-import logo from './logo.svg';
 import './App.css';
+import ConstructionView from "./Views/ConstructionView";
+import { NativeBaseProvider, extendTheme } from "native-base";
+
+const theme = extendTheme({
+  fontConfig: {
+    Avenir: {
+      100: {
+        normal: 'Avenir',
+        italic: 'Avenir'
+      },
+      200: {
+        normal: 'Avenir-Heavy',
+        italic: 'Avenir-Heavy'
+      },
+      300: {
+        normal: 'Avenir-Black',
+        italic: 'Avenir-Black'
+      }
+    }
+  },
+  fonts: {
+    heading: 'Avenir',
+    body: 'Avenir',
+    mono: 'Avenir'
+  }
+})
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <NativeBaseProvider theme={theme}>
+      <ConstructionView />
+    </NativeBaseProvider>
   );
 }
 
