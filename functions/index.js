@@ -35,29 +35,29 @@ exports.iaphubSubscriptionNoty = functions.https
                   case "purchase":
                     notification = {
                       title: "A user has bought a new subscription!",
-                      body: `A new ${request.body.data.productSku.trim()} 
-                            subscription has been purchased`,
+                      // eslint-disable-next-line max-len
+                      body: `A new ${request.body.data.productSku.trim()} subscription has been purchased`,
                     };
                     break;
                   case "subscription_renewal":
                     notification = {
                       title: "A user has renewed their subscription!",
-                      body: `A ${request.body.data.productSku.trim()}
-                      subscription has been renewed.`,
+                      // eslint-disable-next-line max-len
+                      body: `A ${request.body.data.productSku.trim()} subscription has been renewed.`,
                     };
                     break;
                   case "subscription_cancel":
                     notification = {
                       title: "A user has canceled their subscription.",
-                      body: `A ${request.body.data.productSku.trim()}
-                      subscription has been cancelled.`,
+                      // eslint-disable-next-line max-len
+                      body: `A ${request.body.data.productSku.trim()} subscription has been cancelled.`,
                     };
                     break;
                   case "subscription_expire":
                     notification = {
                       title: "A user's subscription has expired.",
-                      body: `A ${request.body.data.productSku.trim()}
-                      subscription has just expired.`,
+                      // eslint-disable-next-line max-len
+                      body: `A ${request.body.data.productSku.trim()} subscription has just expired.`,
                     };
                     break;
                 }
