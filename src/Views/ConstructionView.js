@@ -1,6 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import '../index.css'
 import {Box, Text, Fade, Divider} from "native-base";
+import {FaChevronUp} from 'react-icons/fa'
+import { AiOutlineShoppingCart } from 'react-icons/ai'
 
 const ConstructionView = () => {
   const [constructionText, setConstructionText] = useState("Wadzoo is currently under construction")
@@ -23,6 +25,16 @@ const ConstructionView = () => {
       <Box
         w="100%"
       >
+        <Box
+          w="100%"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Box>
+            <FaChevronUp size={60} />
+            <AiOutlineShoppingCart size={60} />
+          </Box>
+        </Box>
         <Fade in={true} duration={1000}>
           <Box
             my={5}

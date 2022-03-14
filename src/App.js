@@ -1,36 +1,28 @@
 import './App.css';
-import ConstructionView from "./Views/ConstructionView";
-import { NativeBaseProvider, extendTheme } from "native-base";
-
-const theme = extendTheme({
-  fontConfig: {
-    Avenir: {
-      100: {
-        normal: 'Avenir',
-        italic: 'Avenir'
-      },
-      200: {
-        normal: 'Avenir-Heavy',
-        italic: 'Avenir-Heavy'
-      },
-      300: {
-        normal: 'Avenir-Black',
-        italic: 'Avenir-Black'
-      }
-    }
-  },
-  fonts: {
-    heading: 'Avenir',
-    body: 'Avenir',
-    mono: 'Avenir'
-  }
-})
+import { NativeBaseProvider } from "native-base";
+import { Routes, Route } from "react-router-dom";
+import LandingPage from "./Routes/LandingPage";
+import BugReport from "./Routes/BugReport";
+import VerifyBadge from "./Routes/VerifyBadge";
+import PrivacyPolicy from "./Routes/PrivacyPolicy";
+import {appTheme} from "./Theme";
+import NavBar from "./Components/NavBar";
+import './index.css'
+import {ParallaxProvider} from "react-scroll-parallax";
 
 function App() {
   return (
-    <NativeBaseProvider theme={theme}>
-      <ConstructionView />
-    </NativeBaseProvider>
+    <ParallaxProvider>
+      <NativeBaseProvider theme={appTheme}>
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/bugreport" element={<BugReport />} />
+          <Route path="/verifybadge" element={<VerifyBadge />} />
+          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+        </Routes>
+      </NativeBaseProvider>
+    </ParallaxProvider>
   );
 }
 

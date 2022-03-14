@@ -29,7 +29,7 @@ exports.iaphubSubscriptionNoty = functions.https
                 const token = data.notificationToken.token;
                 let notification = {
                   title: "An IAPHUB Webhook was hit...",
-                  body: "The title/body have not been set.",
+                  body: `${request.body.type}`,
                 };
                 switch (request.body.type) {
                   case "purchase":
@@ -94,19 +94,18 @@ exports.iaphubSubscriptionNoty = functions.https
  */
 
 exports.sendMessageNotification = functions.firestore
-    .document("users/{currentUID}/messages/{messagingUID}")
+    .document("users/{currentUID}/chats/{messagingUID}")
     .onWrite((change, context) => {
       functions.logger.log("context.params:",
           context.params, "change.after.data()",
           change.after.data());
-      const messagingName = change.after.data().firstName + " " +
-      change.after.data().lastName;
-      const messages = change.after.data().messages;
-      const lastMessage = messages[messages.length - 1];
-      const lastMessageText = lastMessage.text;
-      const lastMessageStyle = lastMessage.style;
-      const profilePicURL = change.after.data().profilePicURL;
-      if (lastMessageStyle === "from") {
+      const messagingName = change.after.data().displayName;
+      const lastMessageText = change.after.data().text;
+      const outgoing = change.after.data().outgoing;
+      const profilePicURL =
+        change.after.data().profilePicURL ?
+          change.after.data().profilePicURL : "none";
+      if (!outgoing) {
         admin.firestore()
             .doc("users/" + context.params.currentUID)
             .get()
@@ -119,9 +118,9 @@ exports.sendMessageNotification = functions.firestore
                     title: messagingName,
                     body: lastMessageText,
                     sound: "default",
-                    image: profilePicURL,
                   },
                   data: {
+                    type: "message",
                     profilePicURL: profilePicURL,
                   },
                 };
