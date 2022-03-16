@@ -18,6 +18,10 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      },
       { "source": "/app/**", "dynamicLinks": true },
       {
         "source": "/api/hello",

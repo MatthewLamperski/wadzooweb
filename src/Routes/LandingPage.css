@@ -1,0 +1,10 @@
+.moveScreenshot {
+    animation-name: upanddown;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-duration: 1s;
+}
+@keyframes upanddown {
+    from {transform: translateY(0px);}
+    to {transform: translateY(5px)}
+}
