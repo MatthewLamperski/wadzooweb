@@ -1,6 +1,6 @@
 import "./App.css";
 import { NativeBaseProvider } from "native-base";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./Routes/LandingPage";
 import BugReport from "./Routes/BugReport";
 import VerifyBadge from "./Routes/VerifyBadge";
@@ -13,6 +13,7 @@ import { useState } from "react";
 import Contact from "./Routes/Contact";
 import Footer from "./Components/Footer";
 import Beta from "./Routes/Beta";
+import LinkNotFound from "./Routes/LinkNotFound";
 
 function App() {
   const [navbarTransparent, setNavbarTransparent] = useState(true);
@@ -52,6 +53,12 @@ function App() {
             path="/privacypolicy"
             element={
               <PrivacyPolicy setNavbarTransparent={setNavbarTransparent} />
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <LinkNotFound setNavbarTransparent={setNavbarTransparent} />
             }
           />
         </Routes>
