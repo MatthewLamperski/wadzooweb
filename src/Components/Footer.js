@@ -19,26 +19,26 @@ const Footer = () => {
               flex={1}
               space={2}
             >
-              <Link
+              <a
                 style={{
                   color: theme.colors.muted["400"],
                   textDecoration: "none",
                   fontFamily: "Avenir-Heavy",
                 }}
-                to="/contact"
+                href="/contact"
               >
                 Contact Us
-              </Link>
-              <Link
+              </a>
+              <a
                 style={{
                   color: theme.colors.muted["400"],
                   textDecoration: "none",
                   fontFamily: "Avenir-Heavy",
                 }}
-                to="/contact"
+                href="/beta"
               >
                 Beta Test
-              </Link>
+              </a>
             </VStack>
           </Col>
           <Col className="d-flex px-auto">

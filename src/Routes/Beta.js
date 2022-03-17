@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ParallaxBanner } from "react-scroll-parallax";
-import HouseCover from "../Assets/HouseCover.jpg";
+import HouseCover from "../Assets/HousesCover.png";
 import { Col, Container, Image, Row } from "react-bootstrap";
 import { Button, HStack, Text, useTheme } from "native-base";
 import { FaAndroid, FaApple, FaChevronRight } from "react-icons/fa";

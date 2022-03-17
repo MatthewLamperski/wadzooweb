@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaChevronDown } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { ParallaxBanner } from "react-scroll-parallax";
 import "./LandingPage.css";
 import {
@@ -11,9 +11,10 @@ import {
 } from "native-base";
 import { Container, Image, Row, Col } from "react-bootstrap";
 import HousesVideo from "../Assets/houses.mp4";
-import VideoCover from "react-video-cover";
+import HousesCover from "../Assets/HousesCover.png";
 import Investors from "../Assets/Investors.png";
 import Map from "../Assets/Map.png";
+import VideoCover from "react-video-cover";
 
 const LandingPage = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
@@ -45,6 +46,25 @@ const LandingPage = ({ setNavbarTransparent }) => {
       }
     });
   }, []);
+  let deviceType = () => {
+    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    // Windows Phone must come first because its UA also contains "Android"
+    if (/windows phone/i.test(userAgent)) {
+      return "Windows Phone";
+    }
+
+    if (/android/i.test(userAgent)) {
+      return "Android";
+    }
+
+    // iOS detection from: http://stackoverflow.com/a/9039885/177710
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      return "iOS";
+    }
+
+    return "unknown";
+  };
   return (
     <div>
       <ParallaxBanner
@@ -57,25 +77,30 @@ const LandingPage = ({ setNavbarTransparent }) => {
             children: (
               <div
                 style={{
+                  backgroundColor: theme.colors.primary["700"],
                   height: "100%",
                   width: "100%",
-                  position: "absolute",
                   overflow: "hidden",
-                  backgroundColor: theme.colors.primary["800"],
                 }}
               >
                 <VideoCover
                   videoOptions={{
                     src: HousesVideo,
                     muted: true,
-                    loop: true,
                     autoPlay: true,
+                    loop: true,
                     playsInline: true,
+                    poster: deviceType() === "Android" ? HousesCover : null,
+                    style: {
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    },
                   }}
                 />
               </div>
             ),
-            amount: 0.4,
+            speed: 0,
           },
         ]}
       >
@@ -211,8 +236,45 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   color: theme.colors.muted["500"],
                 }}
               >
-                Get access to off-market properties found nowhere else
+                Get access to off-market properties found nowhere else.
               </h1>
+            </div>
+            <div className="p-4">
+              <h1
+                style={{
+                  fontFamily: "Avenir-Black",
+                }}
+              >
+                Try It!
+              </h1>
+              <h1
+                style={{
+                  fontFamily: "Avenir-Heavy",
+                  fontSize: "1.5rem",
+                  color: theme.colors.muted["500"],
+                }}
+              >
+                You can beta test Wadzoo before we launch!
+              </h1>
+              <div style={{ display: "flex" }}>
+                <Button
+                  size="sm"
+                  style={{
+                    borderRadius: 50,
+                    paddingHorizontal: 20,
+                    backgroundColor: theme.colors.primary["500"],
+                    fontFamily: "Avenir-Heavy",
+                  }}
+                  href="/beta"
+                >
+                  <HStack alignItems="center" space={2}>
+                    <Text fontWeight={300} button>
+                      START TESTING
+                    </Text>
+                    <FaChevronRight size={12} color="white" />
+                  </HStack>
+                </Button>
+              </div>
             </div>
           </Col>
           <Col />
