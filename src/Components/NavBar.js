@@ -1,54 +1,213 @@
-import React, { useEffect, useState } from "react";
-import { Nav, Navbar, Container, Image } from "react-bootstrap";
+import React, { useContext, useEffect, useState } from "react";
+import { Nav, Navbar, Container, Image, Offcanvas } from "react-bootstrap";
 import { FiMenu } from "react-icons/fi";
-import { useTheme } from "native-base";
+import { Button, Divider, Pressable, Text, useTheme } from "native-base";
 import LogoLongWhite from "../Assets/LogoLongWhite.png";
+import LogoLongBlack from "../Assets/LogoLongBlack.png";
+import { signMeOut } from "../FirebaseInterface";
+import {
+  FaChevronDown,
+  FaChevronRight,
+  FaEnvelope,
+  FaSignOutAlt,
+  FaTachometerAlt,
+  FaUser,
+  FaVial,
+} from "react-icons/fa";
+import { BiTestTube } from "react-icons/bi";
+import { AppContext } from "../AppContext";
 const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
-  const [expanded, setExpanded] = useState(false);
-  useEffect(() => {
-    if (expanded) {
-      setNavbarTransparent(false);
-    } else if (!expanded) {
-    }
-  }, [expanded]);
+  const { FIRUser, user } = useContext(AppContext);
+  const [show, setShow] = useState(false);
   const theme = useTheme();
   return (
     <Navbar
       fixed="top"
-      expanded={expanded}
       variant="dark"
-      expand="md"
+      expand={false}
       style={{
         fontFamily: "Avenir-Heavy",
         backgroundColor: navbarTransparent
           ? "transparent"
           : theme.colors.secondary["900"],
+        boxShadow: navbarTransparent
+          ? null
+          : "0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
       }}
     >
-      <Container style={{ alignItems: "baseline" }}>
+      <Container fluid>
         <Navbar.Brand style={{ padding: 5 }} href="/">
-          <Image src={LogoLongWhite} height="50" />{" "}
+          <Image src={LogoLongWhite} height="35" />{" "}
         </Navbar.Brand>
+
         <Navbar.Toggle
-          onClick={() => {
-            if (expanded) {
-              setExpanded(false);
-            } else {
-              setExpanded(true);
-            }
-          }}
+          onClick={() => setShow(true)}
           className="ml-auto"
           style={{ border: "none" }}
           aria-controls="basic-navbar-nav"
         >
           <FiMenu color={theme.colors.secondary["50"]} />
         </Navbar.Toggle>
-        <Navbar.Collapse>
-          <Nav>
-            <Nav.Link href="/beta">Beta Testing</Nav.Link>
-            <Nav.Link href="/contact">Contact Us</Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
+        <Navbar.Offcanvas
+          show={show}
+          onHide={() => setShow(false)}
+          placement="start"
+        >
+          <Offcanvas.Header closeButton>
+            <Offcanvas.Title>
+              <Image src={LogoLongBlack} height="40" />
+            </Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body>
+            <Nav>
+              <Nav.Link href="/beta">
+                <div
+                  className="p-3"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderRadius: 8,
+                    boxShadow:
+                      "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <FaVial
+                      color={theme.colors.secondary["800"]}
+                      size={22}
+                      className="mx-2"
+                    />
+                    <Text color="secondary.800" fontWeight={300} fontSize={20}>
+                      Beta Testing
+                    </Text>
+                  </div>
+                  <FaChevronRight
+                    color={theme.colors.secondary["800"]}
+                    size={22}
+                    className="mx-2"
+                  />
+                </div>
+              </Nav.Link>
+              <Nav.Link href="/contact">
+                <div
+                  className="p-3"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    boxShadow:
+                      "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                    borderRadius: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <FaEnvelope
+                      color={theme.colors.secondary["800"]}
+                      size={22}
+                      className="mx-2"
+                    />
+                    <Text color="secondary.800" fontWeight={300} fontSize={20}>
+                      Contact Us
+                    </Text>
+                  </div>
+                  <FaChevronRight
+                    color={theme.colors.secondary["800"]}
+                    size={22}
+                    className="mx-2"
+                  />
+                </div>
+              </Nav.Link>
+            </Nav>
+            {user && (
+              <>
+                <hr style={{ backgroundColor: theme.colors.muted["400"] }} />
+                <div className="p-2 py-3">
+                  <Text color="secondary.800">
+                    Signed in as {user.firstName}
+                  </Text>
+                </div>
+                <Nav>
+                  <Nav.Link href="/portal">
+                    <div
+                      className="p-3"
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        boxShadow:
+                          "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FaTachometerAlt
+                          color={theme.colors.secondary["800"]}
+                          size={22}
+                          className="mx-2"
+                        />
+                        <Text
+                          color="secondary.800"
+                          fontWeight={300}
+                          fontSize={20}
+                        >
+                          Wadzoo Portal
+                        </Text>
+                      </div>
+                      <FaChevronRight
+                        color={theme.colors.secondary["800"]}
+                        size={22}
+                        className="mx-2"
+                      />
+                    </div>
+                  </Nav.Link>
+                </Nav>
+                <Pressable
+                  onPress={() => {
+                    signMeOut().then(() => setShow(false));
+                  }}
+                  px={5}
+                  py={4}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    boxShadow:
+                      "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                    borderRadius: 8,
+                  }}
+                >
+                  {({ isPressed }) => (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        opacity: isPressed ? 0.5 : 1,
+                      }}
+                    >
+                      <FaSignOutAlt
+                        color={theme.colors.secondary["800"]}
+                        size={22}
+                        className="mx-2"
+                      />
+                      <Text
+                        color="secondary.800"
+                        fontWeight={300}
+                        fontSize={20}
+                      >
+                        Sign Out
+                      </Text>
+                    </div>
+                  )}
+                </Pressable>
+              </>
+            )}
+          </Offcanvas.Body>
+        </Navbar.Offcanvas>
       </Container>
     </Navbar>
   );

@@ -1,6 +1,10 @@
 .App {
   text-align: center;
 }
+:root {
+  --toastify-color-progress-dark: #22f622;
+  --toastify-text-color-dark: #22f622;
+}
 
 .App-logo {
   height: 40vmin;

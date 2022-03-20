@@ -16,6 +16,26 @@ import Investors from "../Assets/Investors.png";
 import Map from "../Assets/Map.png";
 import VideoCover from "react-video-cover";
 
+export const deviceType = () => {
+  let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+  // Windows Phone must come first because its UA also contains "Android"
+  if (/windows phone/i.test(userAgent)) {
+    return "Windows Phone";
+  }
+
+  if (/android/i.test(userAgent)) {
+    return "Android";
+  }
+
+  // iOS detection from: http://stackoverflow.com/a/9039885/177710
+  if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+    return "iOS";
+  }
+
+  return "unknown";
+};
+
 const LandingPage = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
   const theme = useTheme();
@@ -46,25 +66,6 @@ const LandingPage = ({ setNavbarTransparent }) => {
       }
     });
   }, []);
-  let deviceType = () => {
-    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-    // Windows Phone must come first because its UA also contains "Android"
-    if (/windows phone/i.test(userAgent)) {
-      return "Windows Phone";
-    }
-
-    if (/android/i.test(userAgent)) {
-      return "Android";
-    }
-
-    // iOS detection from: http://stackoverflow.com/a/9039885/177710
-    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-      return "iOS";
-    }
-
-    return "unknown";
-  };
   return (
     <div>
       <ParallaxBanner

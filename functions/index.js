@@ -11,16 +11,84 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 });
 
 /**
+ * This function updates appInfo users count when user doc is created/deleted
+ */
+
+exports.addUsersCount = functions.firestore
+    .document("users/{uid}")
+    .onCreate((snap, context) => {
+      admin
+          .firestore()
+          .doc("appInfo")
+          .update({usersCount: admin.firestore.FieldValue.increment(1)})
+          .then(() => {
+            functions.logger.log("Added user, updated appInfo");
+          })
+          .catch((err) => {
+            functions.logger.log("Error occured", err);
+          });
+    });
+
+exports.deleteUsersCount = functions.firestore
+    .document("users/{uid}")
+    .onDelete((snap, context) => {
+      admin
+          .firestore()
+          .doc("appInfo")
+          .update({usersCount: admin.firestore.FieldValue.increment(-1)})
+          .then(() => {
+            functions.logger.log("Deleted user doc, updated appInfo");
+          })
+          .catch((err) => {
+            functions.logger.log("Error occured", err);
+          });
+    });
+
+exports.addListingsCount = functions.firestore
+    .document("listings/{docID}")
+    .onCreate((snap, context) => {
+      admin
+          .firestore()
+          .doc("appInfo")
+          .update({listingsCount: admin.firestore.FieldValue.increment(1)})
+          .then(() => {
+            functions.logger.log("Added listing, updated appInfo");
+          })
+          .catch((err) => {
+            functions.logger.log("Error occured", err);
+          });
+    });
+
+exports.deleteListingsCount = functions.firestore
+    .document("listings/{docID}")
+    .onDelete((snap, context) => {
+      admin
+          .firestore()
+          .doc("appInfo")
+          .update({listingsCount: admin.firestore.FieldValue.increment(-1)})
+          .then(() => {
+            functions.logger.log("Deleted listing doc, updated appInfo");
+          })
+          .catch((err) => {
+            functions.logger.log("Error occured", err);
+          });
+    });
+
+/**
  * This function receives a webhook from IAPHUB,
  * it will send me a notification to my phone.
  */
 
-exports.iaphubSubscriptionNoty = functions.https
-    .onRequest((request, response) => {
-      functions.logger.log("NEW IAPHUB REQUEST, METHOD:",
-          request.method, request);
+exports.iaphubSubscriptionNoty = functions.https.onRequest(
+    (request, response) => {
+      functions.logger.log(
+          "NEW IAPHUB REQUEST, METHOD:",
+          request.method,
+          request
+      );
       if (request.method === "POST") {
-        admin.firestore()
+        admin
+            .firestore()
             .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
             .get()
             .then((doc) => {
@@ -68,7 +136,9 @@ exports.iaphubSubscriptionNoty = functions.https
                     sound: "default",
                   },
                 };
-                admin.messaging().sendToDevice(token, payload)
+                admin
+                    .messaging()
+                    .sendToDevice(token, payload)
                     .then((value) => {
                       functions.logger.log("Send subscription noty", value);
                     })
@@ -84,8 +154,8 @@ exports.iaphubSubscriptionNoty = functions.https
             });
         response.sendStatus(200);
       }
-    });
-
+    }
+);
 
 /**
  * Triggers when a user gets a new message and sends a notification
@@ -96,17 +166,21 @@ exports.iaphubSubscriptionNoty = functions.https
 exports.sendMessageNotification = functions.firestore
     .document("users/{currentUID}/chats/{messagingUID}")
     .onWrite((change, context) => {
-      functions.logger.log("context.params:",
-          context.params, "change.after.data()",
-          change.after.data());
+      functions.logger.log(
+          "context.params:",
+          context.params,
+          "change.after.data()",
+          change.after.data()
+      );
       const messagingName = change.after.data().displayName;
       const lastMessageText = change.after.data().text;
       const outgoing = change.after.data().outgoing;
-      const profilePicURL =
-        change.after.data().profilePicURL ?
-          change.after.data().profilePicURL : "none";
+      const profilePicURL = change.after.data().profilePicURL ?
+      change.after.data().profilePicURL :
+      "none";
       if (!outgoing) {
-        admin.firestore()
+        admin
+            .firestore()
             .doc("users/" + context.params.currentUID)
             .get()
             .then((doc) => {
@@ -124,10 +198,14 @@ exports.sendMessageNotification = functions.firestore
                     profilePicURL: profilePicURL,
                   },
                 };
-                admin.messaging().sendToDevice(token, payload)
+                admin
+                    .messaging()
+                    .sendToDevice(token, payload)
                     .then((value) => {
-                      functions.logger
-                          .log("Successfully sent user notification", value);
+                      functions.logger.log(
+                          "Successfully sent user notification",
+                          value
+                      );
                     })
                     .catch((err) => {
                       functions.logger.log("Error sending notification", err);
