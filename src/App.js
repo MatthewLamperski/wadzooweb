@@ -25,7 +25,6 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import LoadingScreen from "./Views/LoadingScreen";
 import { getUserDoc } from "./FirebaseInterface";
-import logBox from "react-native-web/dist/exports/LogBox";
 import CreateListing from "./Views/DataEntryDashboard/CreateListing";
 import ManageListings from "./Views/DataEntryDashboard/ManageListings";
 
@@ -40,6 +39,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+export const secondaryApp = initializeApp(firebaseConfig, "secondary");
 export const db = getFirestore(app);
 export const analytics = getAnalytics(app);
 
@@ -57,7 +57,7 @@ function App() {
     setError,
   };
   useEffect(() => {
-    const auth = getAuth();
+    const auth = getAuth(app);
     onAuthStateChanged(auth, (authUser) => {
       if (authUser) {
         getUserDoc(authUser.uid)

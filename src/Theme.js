@@ -98,12 +98,7 @@ export const appTheme = extendTheme({
           rounded: "sm",
         },
         subtle: {
-          pt: 3,
-          pb: 3,
-          my: 3,
-          shadow: 5,
-          rounded: "sm",
-          _text: { fontWeight: 300, fontSize: "sm" },
+          _text: { fontWeight: 200, fontSize: "sm" },
         },
       },
     },
@@ -129,11 +124,12 @@ export const appTheme = extendTheme({
       variants: {
         outline: {
           width: "100%",
-          my: 3,
-          borderColor: "muted.300",
+          borderColor: "muted.400",
           _hover: {
             bg: "transparent",
           },
+          fontWeight: 100,
+          placeholderTextColor: "muted.500",
         },
       },
     },

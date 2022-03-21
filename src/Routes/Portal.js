@@ -16,7 +16,7 @@ const Portal = ({ setNavbarTransparent }) => {
   }, []);
   const theme = useTheme();
   const renderDashboard = () => {
-    if (user.role) {
+    if (user && user.role) {
       if (user.role === "dataEntry") {
         return <DataEntryDashboard />;
       } else if (user.role === "admin") {
