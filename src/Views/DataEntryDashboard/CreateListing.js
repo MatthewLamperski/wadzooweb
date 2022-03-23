@@ -3,30 +3,38 @@ import { AppContext } from "../../AppContext";
 import {
   Box,
   Button,
+  Divider,
   FormControl,
   HStack,
+  Image,
   Input,
   Modal,
   PresenceTransition,
   Pressable,
   Select,
+  Skeleton,
   Spinner,
   Text,
   TextArea,
   useTheme,
+  VStack,
 } from "native-base";
 import { Col, Container, Row } from "react-bootstrap";
 import AccessDenied from "../AccessDenied";
 import LoadingScreen from "../LoadingScreen";
 import { createUser, findUsersByEmail } from "../../FirebaseInterface";
 import {
+  FaBath,
+  FaBed,
   FaCheck,
-  FaEllipsisH,
+  FaExclamationTriangle,
+  FaRulerCombined,
   FaTimes,
-  FaTrash,
   FaTrashAlt,
 } from "react-icons/all";
 import { toast } from "react-toastify";
+import "./CreateListing.css";
+import { colors } from "../../Constants";
 
 const propertyTypeVals = [
   "Single Family Residential",
@@ -40,6 +48,22 @@ const propertyTypeVals = [
   "Raw Land",
   "Commercial",
 ];
+
+const formatPhoneNumber = (num) => {
+  if (num.length === 0) {
+    return "";
+  } else {
+    if (num.length <= 3) {
+      return num;
+    } else if (num.length <= 6) {
+      return `${num.substring(0, 3)}-${num.substring(3)}`;
+    } else {
+      return `${num.substring(0, 3)}-${num.substring(3, 6)}-${num.substring(
+        6
+      )}`;
+    }
+  }
+};
 
 const CreateListing = ({ setNavbarTransparent }) => {
   const { user, setError } = useContext(AppContext);
@@ -99,6 +123,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
             toast.success("User created successfully.");
             setListing((prevState) => ({
               ...prevState,
+              email: result.newUser.email,
               listerObj: result.newUser,
             }));
             setCreateUserLoading(false);
@@ -160,7 +185,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       <Text color="primary.500" fontWeight={300} fontSize={20}>
                         Create Listing
                       </Text>
-                      {listing && listing.listerObj ? (
+                      {listing && listing.listerObj && listing.email ? (
                         <div className="py-3">
                           <div
                             className="py-2"
@@ -178,6 +203,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                 setListing((prevState) => {
                                   let tmpListing = prevState;
                                   delete tmpListing.listerObj;
+                                  delete tmpListing.email;
                                   console.log(tmpListing);
                                   return { ...tmpListing };
                                 });
@@ -210,9 +236,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                 <Text>{`${listing.listerObj.firstName} ${listing.listerObj.lastName}`}</Text>
                                 <FaCheck color={theme.colors.primary["500"]} />
                               </HStack>
-                              <Text fontWeight={100}>
-                                {listing.listerObj.email}
-                              </Text>
+                              <Text fontWeight={100}>{listing.email}</Text>
                             </div>
                           </Box>
                         </div>
@@ -272,6 +296,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                   setEmailSearchResults();
                                   setListing((prevState) => ({
                                     ...prevState,
+                                    email: user.email,
                                     listerObj: user,
                                   }));
                                 }}
@@ -320,15 +345,22 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           <FormControl.Label>Phone Number</FormControl.Label>
                           <Input
                             _invalid={{ borderColor: "red.500" }}
-                            onChangeText={(text) =>
-                              setListing((prevState) => ({
-                                ...prevState,
-                                phoneNumber: text,
-                              }))
-                            }
+                            onChangeText={(text) => {
+                              const regex = /^[0-9\b]+$/;
+                              if (
+                                (text === "" ||
+                                  regex.test(text.replace(/-/g, ""))) &&
+                                text.replace(/-/g, "").length <= 10
+                              ) {
+                                setListing((prevState) => ({
+                                  ...prevState,
+                                  phoneNumber: text.replace(/-/g, ""),
+                                }));
+                              }
+                            }}
                             value={
                               listing && listing.phoneNumber
-                                ? listing.phoneNumber
+                                ? formatPhoneNumber(listing.phoneNumber)
                                 : ""
                             }
                             placeholder="1234567890"
@@ -777,28 +809,53 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             Only numbers, no commas or dollar signs
                           </FormControl.HelperText>
                         </FormControl>
-                        <FormControl py={2}>
-                          <FormControl.Label>
-                            Occupancy Status
-                          </FormControl.Label>
-                          <Input
-                            _invalid={{ borderColor: "red.500" }}
-                            onChangeText={(text) =>
-                              setListing((prevState) => ({
-                                ...prevState,
-                                occupancyStatus: text,
-                              }))
-                            }
-                            value={
-                              listing && listing.occupancyStatus
-                                ? listing.occupancyStatus
-                                : ""
-                            }
-                            placeholder="Occupied"
-                            variant="outline"
-                            size="sm"
-                          />
-                        </FormControl>
+                        <Row>
+                          <Col>
+                            <FormControl py={2}>
+                              <FormControl.Label>Year Built</FormControl.Label>
+                              <Input
+                                _invalid={{ borderColor: "red.500" }}
+                                onChangeText={(text) =>
+                                  setListing((prevState) => ({
+                                    ...prevState,
+                                    yearBuilt: text,
+                                  }))
+                                }
+                                value={
+                                  listing && listing.yearBuilt
+                                    ? listing.yearBuilt
+                                    : ""
+                                }
+                                placeholder="1964"
+                                variant="outline"
+                                size="sm"
+                              />
+                            </FormControl>
+                          </Col>
+                          <Col>
+                            <FormControl py={2}>
+                              <FormControl.Label>Occupancy</FormControl.Label>
+                              <Input
+                                _invalid={{ borderColor: "red.500" }}
+                                onChangeText={(text) =>
+                                  setListing((prevState) => ({
+                                    ...prevState,
+                                    occupancyStatus: text,
+                                  }))
+                                }
+                                value={
+                                  listing && listing.occupancyStatus
+                                    ? listing.occupancyStatus
+                                    : ""
+                                }
+                                placeholder="Occupancy Status"
+                                variant="outline"
+                                size="sm"
+                              />
+                            </FormControl>
+                          </Col>
+                        </Row>
+
                         <FormControl py={2}>
                           <FormControl.Label>
                             Net Operating Income (noi)
@@ -957,27 +1014,8 @@ const CreateListing = ({ setNavbarTransparent }) => {
                 style={{
                   flex: 1,
                   backgroundColor: "#EDf0F3",
-                  overflow: "scroll",
                 }}
               >
-                <Container
-                  className="pt-5"
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    overflowWrap: "break-word",
-                    flexDirection: "column",
-                  }}
-                >
-                  <h3
-                    style={{
-                      color: theme.colors.secondary["800"],
-                      fontFamily: "Avenir-Black",
-                    }}
-                  >
-                    Preview:
-                  </h3>
-                </Container>
                 <div
                   className="p-3 m-3"
                   style={{
@@ -985,10 +1023,203 @@ const CreateListing = ({ setNavbarTransparent }) => {
                     backgroundColor: "white",
                     boxShadow:
                       "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                    flex: 1,
                   }}
                 >
-                  <Text fontSize={18}>Listing:</Text>
-                  <Text fontSize={12}>{JSON.stringify(listing, null, 2)}</Text>
+                  <div
+                    className="d-flex"
+                    style={{ flexDirection: "column" }}
+                  ></div>
+                  <div
+                    className="iphone-x flex-column justify-content-flex-start align-items-center"
+                    style={{
+                      overflow: "scroll",
+                      backgroundColor: theme.colors.dark["100"],
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        backgroundColor: theme.colors.dark["50"],
+                        display: "flex",
+                        flex: 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: 200,
+                          width: "100%",
+                          position: "relative",
+                        }}
+                      >
+                        <Image
+                          key={
+                            listing && listing.images && listing.images[0]
+                              ? listing.images[0]
+                              : "wadzoo.com"
+                          }
+                          source={{
+                            uri:
+                              listing && listing.images && listing.images[0]
+                                ? listing.images[0]
+                                : "wadzoo.com",
+                          }}
+                          alt="Listing Image"
+                          resizeMode="cover"
+                          h="100%"
+                          fallbackElement={
+                            <Box
+                              style={{ flex: 1 }}
+                              height="100%"
+                              justifyContent="center"
+                              alignItems="center"
+                              _dark={{ bg: "dark.300" }}
+                            >
+                              <VStack
+                                style={{
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                                w="70%"
+                                space={3}
+                              >
+                                <FaExclamationTriangle
+                                  size={20}
+                                  color={theme.colors.lightText}
+                                />
+                                <Text
+                                  fontWeight={200}
+                                  fontSize={12}
+                                  textAlign="center"
+                                  color="lightText"
+                                >
+                                  You haven't added any images yet.
+                                </Text>
+                              </VStack>
+                            </Box>
+                          }
+                          w="100%"
+                        />
+                        <div
+                          className="py-2 px-1"
+                          style={{
+                            background:
+                              "linear-gradient(0deg, #000000, transparent)",
+                            position: "absolute",
+                            width: "100%",
+                            bottom: 0,
+                          }}
+                        >
+                          {listing && listing.purchasePrice ? (
+                            <Text
+                              fontWeight={300}
+                              fontSize={18}
+                              color="lightText"
+                            >{`$${Number(
+                              listing.purchasePrice
+                            ).toLocaleString()}`}</Text>
+                          ) : (
+                            <Text fontSize={18} color="lightText">
+                              Price Not Set
+                            </Text>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <VStack
+                      style={{ flex: 1, flexShrink: 1, borderRadius: 5 }}
+                      m={1}
+                      p={3}
+                      shadow={2}
+                      rounded={3}
+                      bg="dark.50"
+                      space={3}
+                    >
+                      <Text color="primary.500" fontWeight={300}>
+                        Address
+                      </Text>
+                      {listing && listing.address ? (
+                        <Text fontWeight={300} fontSize={20} color="lightText">
+                          {listing && listing.address
+                            ? listing.address
+                            : "Address Not Set"}
+                          {", "}
+                          {listing && listing.city
+                            ? listing.city
+                            : "City"},{" "}
+                          {listing && listing.state ? listing.state : "State"}
+                        </Text>
+                      ) : (
+                        <>
+                          <Skeleton.Text p={5} />
+                          <Skeleton.Text p={5} />
+                        </>
+                      )}
+                    </VStack>
+                    <VStack
+                      m={1}
+                      p={3}
+                      shadow={2}
+                      rounded={3}
+                      bg="dark.50"
+                      space={2}
+                    >
+                      <HStack
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        space={2}
+                      >
+                        <FaBed
+                          name="bed"
+                          size={16}
+                          color={theme.colors.lightText}
+                        />
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          {listing && listing.beds ? listing.beds : "X"}
+                        </Text>
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          Baths
+                        </Text>
+                        <Divider orientation="vertical" />
+                        <FaBath
+                          name="bath"
+                          size={16}
+                          color={theme.colors.lightText}
+                        />
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          {listing && listing.baths ? listing.baths : "X"}
+                        </Text>
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          Beds
+                        </Text>
+                      </HStack>
+                      <Divider />
+                      <HStack
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        space={2}
+                      >
+                        <FaRulerCombined
+                          size={16}
+                          color={theme.colors.lightText}
+                        />
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          {Number(
+                            listing && listing.sqftHeated
+                              ? listing.sqftHeated
+                              : "000"
+                          ).toLocaleString()}
+                        </Text>
+                        <Text color="lightText" fontWeight={300} fontSize={16}>
+                          Heated Sqft
+                        </Text>
+                      </HStack>
+                    </VStack>
+                  </div>
                 </div>
               </div>
             </div>

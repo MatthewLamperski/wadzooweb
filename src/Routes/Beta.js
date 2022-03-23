@@ -77,7 +77,7 @@ const Beta = ({ setNavbarTransparent }) => {
         <Container className="p-5">
           <Row>
             <Col />
-            <Col xs="12" lg="5" className="py-5">
+            <Col xs="12" lg="5" className="p-5">
               <div className="py-3">
                 <HStack
                   justifyContent="flex-start"
@@ -109,12 +109,12 @@ const Beta = ({ setNavbarTransparent }) => {
                   TestFlight.
                 </h1>
               </div>
-              <div style={{ display: "flex" }} className="py-3">
+              <div style={{ display: "flex" }}>
                 <Button
-                  size="sm"
                   style={{
                     borderRadius: 50,
                     paddingHorizontal: 20,
+                    paddingVertical: 15,
                     backgroundColor: theme.colors.primary["500"],
                     fontFamily: "Avenir-Heavy",
                   }}
@@ -131,7 +131,7 @@ const Beta = ({ setNavbarTransparent }) => {
                 </Button>
               </div>
             </Col>
-            <Col xs="12" lg="5" className=" py-5">
+            <Col xs="12" lg="5" className="p-5">
               <div className="py-3">
                 <HStack
                   justifyContent="flex-start"
@@ -151,16 +151,40 @@ const Beta = ({ setNavbarTransparent }) => {
                   </h1>
                 </HStack>
               </div>
-              <h1
-                style={{
-                  fontFamily: "Avenir-Heavy",
-                  fontSize: "1.5rem",
-                  color: theme.colors.muted["500"],
-                }}
-              >
-                Beta testing for Android is coming soon. Come back soon to keep
-                updated.
-              </h1>
+              <div className="py-3">
+                <h1
+                  style={{
+                    fontFamily: "Avenir-Heavy",
+                    fontSize: "1.5rem",
+                    color: theme.colors.muted["500"],
+                  }}
+                >
+                  Beta testing for Android is now live!
+                </h1>
+              </div>
+              <div style={{ display: "flex" }}>
+                <Button
+                  style={{
+                    borderRadius: 50,
+                    paddingHorizontal: 20,
+                    paddingVertical: 15,
+                    backgroundColor: theme.colors.primary["500"],
+                    fontFamily: "Avenir-Heavy",
+                  }}
+                  onPress={() =>
+                    window.open(
+                      "https://play.google.com/apps/testing/com.wadzoo"
+                    )
+                  }
+                >
+                  <HStack alignItems="center" space={2}>
+                    <Text fontWeight={300} button>
+                      START TESTING
+                    </Text>
+                    <FaChevronRight size={12} color="white" />
+                  </HStack>
+                </Button>
+              </div>
             </Col>
             <Col />
           </Row>
