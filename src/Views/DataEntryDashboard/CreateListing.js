@@ -19,10 +19,14 @@ import {
   useTheme,
   VStack,
 } from "native-base";
-import { Col, Container, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import AccessDenied from "../AccessDenied";
 import LoadingScreen from "../LoadingScreen";
-import { createUser, findUsersByEmail } from "../../FirebaseInterface";
+import {
+  createListing,
+  createUser,
+  findUsersByEmail,
+} from "../../FirebaseInterface";
 import {
   FaBath,
   FaBed,
@@ -34,7 +38,9 @@ import {
 } from "react-icons/all";
 import { toast } from "react-toastify";
 import "./CreateListing.css";
-import { colors } from "../../Constants";
+import { FaUser } from "react-icons/fa";
+import Geocode from "react-geocode";
+import ngeohash from "ngeohash";
 
 const propertyTypeVals = [
   "Single Family Residential",
@@ -74,6 +80,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
   const [emailSearchLoading, setEmailSearchLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [showData, setShowData] = useState(false);
 
   // Create New User State
   const [createUserLoading, setCreateUserLoading] = useState(false);
@@ -108,10 +115,58 @@ const CreateListing = ({ setNavbarTransparent }) => {
     );
   }, []);
   const handleCreateListing = () => {
-    if (!createLoading) {
-      setCreateLoading(true);
-    } else {
-      setCreateLoading(false);
+    if (validated()) {
+      if (!createLoading) {
+        setCreateLoading(true);
+        // Upload listing to db
+        Geocode.setApiKey("AIzaSyA9bRZxPfE3728Oi902FVJKzWgCOGyQL3U");
+        Geocode.fromAddress(
+          `${listing.address} ${listing.city}, ${listing.state} ${listing.zipCode}`
+        )
+          .then((res) => {
+            const { lat, lng } = res.results[0].geometry.location;
+            const geohash = ngeohash.encode(lat, lng);
+            let tmpListing = {
+              ...listing,
+              lister: listing.listerObj.uid,
+            };
+            delete tmpListing.listerObj;
+            const newListing = {
+              ...tmpListing,
+              geohash,
+              lat,
+              lng,
+              created: new Date(),
+            };
+            createListing(newListing)
+              .then((newDoc) => {
+                toast.success("Listing successfully uploading!");
+                setListing();
+                setListerEmail();
+                setEmailSearchResults();
+                setCreateLoading(false);
+                console.log(JSON.stringify(newDoc, null, 3));
+              })
+              .catch((err) => {
+                setCreateLoading(false);
+                setError(err);
+              });
+          })
+          .catch((err) => {
+            setCreateLoading(false);
+            setError({
+              title: "Something went wrong.",
+              message: "Here's the error: " + JSON.stringify(err),
+            });
+          });
+      } else {
+        setCreateLoading(false);
+        setError({
+          title: "The listing is still being created",
+          message:
+            "Please wait, if it doees not upload for a bit, refresh the page.",
+        });
+      }
     }
   };
   const handleCreateUser = () => {
@@ -124,6 +179,8 @@ const CreateListing = ({ setNavbarTransparent }) => {
             setListing((prevState) => ({
               ...prevState,
               email: result.newUser.email,
+              firstName: result.newUser.firstName,
+              lastName: result.newUser.lastName,
               listerObj: result.newUser,
             }));
             setCreateUserLoading(false);
@@ -146,7 +203,90 @@ const CreateListing = ({ setNavbarTransparent }) => {
       setCreateUserLoading(false);
     }
   };
-  const validated = () => {};
+  const validated = () => {
+    if (listing) {
+      if (listing.listerObj === undefined) {
+        setError({
+          title: "Must include a lister.",
+          message: "Start typing to find users, if none show up, create one.",
+        });
+        return false;
+      } else if (listing.phoneNumber === undefined) {
+        setFormErrors({
+          phoneNumber: "Phone number required",
+        });
+        return false;
+      } else if (listing.companyName === undefined) {
+        setFormErrors({
+          companyName: "Company Name required",
+        });
+        return false;
+      } else if (listing.address === undefined) {
+        setFormErrors({
+          address: "Address required",
+        });
+        return false;
+      } else if (listing.city === undefined) {
+        setFormErrors({
+          city: "City required",
+        });
+        return false;
+      } else if (listing.state === undefined) {
+        setFormErrors({
+          state: "State required",
+        });
+        return false;
+      } else if (listing.zipCode === undefined) {
+        setFormErrors({
+          zipCode: "Zip code required",
+        });
+        return false;
+      } else if (listing.beds === undefined) {
+        setFormErrors({
+          beds: "Beds required",
+        });
+        return false;
+      } else if (listing.baths === undefined) {
+        setFormErrors({
+          baths: "Baths required",
+        });
+        return false;
+      } else if (listing.acres === undefined) {
+        setFormErrors({
+          acres: "Acres required",
+        });
+        return false;
+      } else if (listing.sqftHeated === undefined) {
+        setFormErrors({
+          sqftHeated: "Sqft Heated required",
+        });
+        return false;
+      } else if (listing.purchasePrice === undefined) {
+        setFormErrors({
+          purchasePrice: "Price required, must be a number",
+        });
+        return false;
+      } else if (listing.propertyType === undefined) {
+        setFormErrors({
+          propertyType: "Property type required",
+        });
+        return false;
+      } else if (listing.images === undefined || listing.images.length < 1) {
+        setFormErrors({
+          images: "At least one image required",
+        });
+      } else {
+        setFormErrors({});
+        return true;
+      }
+    } else {
+      setError({
+        title: "Form not filled out.",
+        message: "Please fill out all of the required fields in the form",
+      });
+      return false;
+    }
+  };
   const theme = useTheme();
   if (user) {
     if ((user.role && user.role === "dataEntry") || user.role === "admin") {
@@ -204,7 +344,8 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                   let tmpListing = prevState;
                                   delete tmpListing.listerObj;
                                   delete tmpListing.email;
-                                  console.log(tmpListing);
+                                  delete tmpListing.firstName;
+                                  delete tmpListing.lastName;
                                   return { ...tmpListing };
                                 });
                               }}
@@ -242,16 +383,30 @@ const CreateListing = ({ setNavbarTransparent }) => {
                         </div>
                       ) : (
                         <div className="py-3">
-                          <Text fontSize={16} color="secondary.800">
-                            Lister:
-                          </Text>
-                          <Input
-                            onChangeText={(text) => setListerEmail(text)}
-                            value={listerEmail ? listerEmail : ""}
-                            fontSize={16}
-                            placeholder="Start typing email"
-                            variant="outline"
-                          />
+                          <FormControl
+                            isRequired
+                            isInvalid={"lister" in formErrors}
+                          >
+                            <FormControl.Label>Lister:</FormControl.Label>
+                            <Input
+                              onChangeText={(text) => setListerEmail(text)}
+                              value={listerEmail ? listerEmail : ""}
+                              fontSize={16}
+                              placeholder="Start typing email"
+                              variant="outline"
+                            />
+                            {"lister" in formErrors ? (
+                              <FormControl.ErrorMessage>
+                                Lister required.
+                              </FormControl.ErrorMessage>
+                            ) : (
+                              <FormControl.HelperText>
+                                Start typing an email address. If no users show
+                                up, create a user with their name and email
+                                address.
+                              </FormControl.HelperText>
+                            )}
+                          </FormControl>
                           {emailSearchLoading && (
                             <div
                               className="py-2"
@@ -297,8 +452,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                   setListing((prevState) => ({
                                     ...prevState,
                                     email: user.email,
+                                    firstName: user.firstName,
+                                    lastName: user.lastName,
                                     listerObj: user,
                                   }));
+                                  toast.success("Lister updated!");
                                 }}
                               >
                                 {({ isPressed, isHovered }) => (
@@ -367,9 +525,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             variant="outline"
                             size="lg"
                           />
-                          <FormControl.HelperText>
-                            Must be 10 digits, only numbers.
-                          </FormControl.HelperText>
+                          {"phoneNumber" in formErrors ? (
+                            <FormControl.ErrorMessage>
+                              {formErrors.phoneNumber}
+                            </FormControl.ErrorMessage>
+                          ) : (
+                            <FormControl.HelperText>
+                              Must be 10 digits, only numbers.
+                            </FormControl.HelperText>
+                          )}
                         </FormControl>
                         <FormControl
                           isRequired
@@ -394,6 +558,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             variant="outline"
                             size="lg"
                           />
+                          {"companyName" in formErrors && (
+                            <FormControl.ErrorMessage>
+                              {formErrors.companyName}
+                            </FormControl.ErrorMessage>
+                          )}
                         </FormControl>
                       </div>
                     </div>
@@ -426,9 +595,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           variant="outline"
                           size="sm"
                         />
-                        <FormControl.HelperText>
-                          Only the street address, not the city/state.
-                        </FormControl.HelperText>
+                        {"address" in formErrors ? (
+                          <FormControl.ErrorMessage>
+                            {formErrors.address}
+                          </FormControl.ErrorMessage>
+                        ) : (
+                          <FormControl.HelperText>
+                            Only the street address, not the city/state.
+                          </FormControl.HelperText>
+                        )}
                       </FormControl>
                       <FormControl
                         isRequired
@@ -449,6 +624,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           variant="outline"
                           size="sm"
                         />
+                        {"city" in formErrors && (
+                          <FormControl.ErrorMessage>
+                            {formErrors.city}
+                          </FormControl.ErrorMessage>
+                        )}
                       </FormControl>
                       <Row>
                         <Col>
@@ -473,6 +653,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
+                            {"state" in formErrors && (
+                              <FormControl.ErrorMessage>
+                                {formErrors.state}
+                              </FormControl.ErrorMessage>
+                            )}
                           </FormControl>
                         </Col>
                         <Col>
@@ -499,6 +684,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
+                            {"zipCode" in formErrors && (
+                              <FormControl.ErrorMessage>
+                                {formErrors.zipCode}
+                              </FormControl.ErrorMessage>
+                            )}
                           </FormControl>
                         </Col>
                       </Row>
@@ -525,9 +715,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
-                            <FormControl.HelperText>
-                              Only numbers
-                            </FormControl.HelperText>
+                            {"beds" in formErrors ? (
+                              <FormControl.ErrorMessage>
+                                {formErrors.beds}
+                              </FormControl.ErrorMessage>
+                            ) : (
+                              <FormControl.HelperText>
+                                Only numbers
+                              </FormControl.HelperText>
+                            )}
                           </FormControl>
                         </Col>
                         <Col>
@@ -552,6 +748,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
+                            {"baths" in formErrors && (
+                              <FormControl.ErrorMessage>
+                                {formErrors.baths}
+                              </FormControl.ErrorMessage>
+                            )}
                           </FormControl>
                         </Col>
                       </Row>
@@ -579,9 +780,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
-                            <FormControl.HelperText>
-                              Decimals Allowed
-                            </FormControl.HelperText>
+                            {"acres" in formErrors ? (
+                              <FormControl.ErrorMessage>
+                                {formErrors.acres}
+                              </FormControl.ErrorMessage>
+                            ) : (
+                              <FormControl.HelperText>
+                                Decimals Allowed
+                              </FormControl.HelperText>
+                            )}
                           </FormControl>
                         </Col>
                         <Col>
@@ -608,9 +815,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
-                            <FormControl.HelperText>
-                              Only numbers
-                            </FormControl.HelperText>
+                            {"sqftHeated" in formErrors ? (
+                              <FormControl.ErrorMessage>
+                                {formErrors.sqftHeated}
+                              </FormControl.ErrorMessage>
+                            ) : (
+                              <FormControl.HelperText>
+                                Only Numbers
+                              </FormControl.HelperText>
+                            )}
                           </FormControl>
                         </Col>
                       </Row>
@@ -637,9 +850,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           variant="outline"
                           size="sm"
                         />
-                        <FormControl.HelperText>
-                          Only numbers, no commas or dollar signs
-                        </FormControl.HelperText>
+                        {"purchasePrice" in formErrors ? (
+                          <FormControl.ErrorMessage>
+                            {formErrors.purchasePrice}
+                          </FormControl.ErrorMessage>
+                        ) : (
+                          <FormControl.HelperText>
+                            Only numbers, no commas or dollar signs
+                          </FormControl.HelperText>
+                        )}
                       </FormControl>
                       <FormControl
                         isRequired
@@ -660,9 +879,16 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             <Select.Item label={type} value={type} key={type} />
                           ))}
                         </Select>
-                        <FormControl.HelperText>
-                          If you don't see the exact type, pick the closest one.
-                        </FormControl.HelperText>
+                        {"propertyType" in formErrors ? (
+                          <FormControl.ErrorMessage>
+                            {formErrors.propertyType}
+                          </FormControl.ErrorMessage>
+                        ) : (
+                          <FormControl.HelperText>
+                            If you don't see the exact type, pick the closest
+                            one.
+                          </FormControl.HelperText>
+                        )}
                       </FormControl>
                     </div>
                     <div className="py-2">
@@ -776,9 +1002,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                         >
                           Add Another URL
                         </Button>
-                        <FormControl.HelperText>
-                          At least one image is required, the more the better!
-                        </FormControl.HelperText>
+                        {"images" in formErrors ? (
+                          <FormControl.ErrorMessage>
+                            {formErrors.images}
+                          </FormControl.ErrorMessage>
+                        ) : (
+                          <FormControl.HelperText>
+                            At least one image is required, the more the better!
+                          </FormControl.HelperText>
+                        )}
                       </FormControl>
                       <div className="py-2">
                         <Text
@@ -1014,22 +1246,28 @@ const CreateListing = ({ setNavbarTransparent }) => {
                 style={{
                   flex: 1,
                   backgroundColor: "#EDf0F3",
+                  overflow: "scroll",
                 }}
               >
                 <div
                   className="p-3 m-3"
                   style={{
+                    flexDirection: "column",
                     borderRadius: 8,
                     backgroundColor: "white",
+                    display: "flex",
                     boxShadow:
                       "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
                     flex: 1,
+                    overflow: "scroll",
                   }}
                 >
-                  <div
-                    className="d-flex"
-                    style={{ flexDirection: "column" }}
-                  ></div>
+                  <Text fontSize={20} fontWeight={300} color="secondary.800">
+                    Live Preview
+                  </Text>
+                  <Text fontSize={14} color="muted.400">
+                    The preview will update as you fill in the form.
+                  </Text>
                   <div
                     className="iphone-x flex-column justify-content-flex-start align-items-center"
                     style={{
@@ -1180,7 +1418,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           {listing && listing.beds ? listing.beds : "X"}
                         </Text>
                         <Text color="lightText" fontWeight={300} fontSize={16}>
-                          Baths
+                          Beds
                         </Text>
                         <Divider orientation="vertical" />
                         <FaBath
@@ -1192,7 +1430,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           {listing && listing.baths ? listing.baths : "X"}
                         </Text>
                         <Text color="lightText" fontWeight={300} fontSize={16}>
-                          Beds
+                          Baths
                         </Text>
                       </HStack>
                       <Divider />
@@ -1208,18 +1446,378 @@ const CreateListing = ({ setNavbarTransparent }) => {
                           color={theme.colors.lightText}
                         />
                         <Text color="lightText" fontWeight={300} fontSize={16}>
-                          {Number(
-                            listing && listing.sqftHeated
-                              ? listing.sqftHeated
-                              : "000"
-                          ).toLocaleString()}
+                          {listing && listing.sqftHeated
+                            ? Number(listing.sqftHeated).toLocaleString()
+                            : "X"}
                         </Text>
                         <Text color="lightText" fontWeight={300} fontSize={16}>
                           Heated Sqft
                         </Text>
                       </HStack>
                     </VStack>
+                    <VStack
+                      m={1}
+                      p={3}
+                      shadow={2}
+                      rounded={3}
+                      bg="dark.50"
+                      space={3}
+                    >
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            fontWeight={300}
+                          >
+                            Property Type
+                          </Text>
+                          {listing && listing.propertyType ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              fontWeight={100}
+                            >
+                              {listing.propertyType}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            textAlign="right"
+                            fontWeight={300}
+                          >
+                            Lot
+                          </Text>
+                          {listing && listing.acres ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              textAlign="right"
+                              fontWeight={100}
+                            >
+                              {listing.acres} ac
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                      </HStack>
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            fontWeight={300}
+                          >
+                            Year Built
+                          </Text>
+                          {listing && listing.yearBuilt ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              fontWeight={100}
+                            >
+                              {listing.yearBuilt}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            textAlign="right"
+                            fontWeight={300}
+                          >
+                            After Repair Value
+                          </Text>
+                          {listing && listing.arv ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              textAlign="right"
+                              fontWeight={100}
+                            >
+                              ${Number(listing.arv).toLocaleString()}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                      </HStack>
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            fontWeight={300}
+                          >
+                            Occupancy Status
+                          </Text>
+                          {listing && listing.occupancyStatus ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              fontWeight={100}
+                            >
+                              {listing.occupancyStatus}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            textAlign="right"
+                            fontWeight={300}
+                          >
+                            Repair Cost
+                          </Text>
+                          {listing && listing.repairCost ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              textAlign="right"
+                              fontWeight={100}
+                            >
+                              ${Number(listing.repairCost).toLocaleString()}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                      </HStack>
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            fontWeight={300}
+                          >
+                            Buyer's Fee
+                          </Text>
+                          {listing && listing.buyersFee ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              fontWeight={100}
+                            >
+                              ${Number(listing.buyersFee).toLocaleString()}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            textAlign="right"
+                            fontWeight={300}
+                          >
+                            Collected Rent
+                          </Text>
+                          {listing && listing.rent ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              textAlign="right"
+                              fontWeight={100}
+                            >
+                              ${Number(listing.rent).toLocaleString()}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                      </HStack>
+                      <HStack
+                        style={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            fontWeight={300}
+                          >
+                            Net Operating Income
+                          </Text>
+                          {listing && listing.noi ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              fontWeight={100}
+                            >
+                              ${Number(listing.noi).toLocaleString()}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                        <VStack>
+                          <Text
+                            fontSize={10}
+                            color="lightText"
+                            textAlign="right"
+                            fontWeight={300}
+                          >
+                            Capitalization Rate
+                          </Text>
+                          {listing && listing.cap ? (
+                            <Text
+                              fontSize={10}
+                              color="lightText"
+                              textAlign="right"
+                              fontWeight={100}
+                            >
+                              {listing.cap}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </VStack>
+                      </HStack>
+                    </VStack>
+                    <VStack m={1} p={3} shadow={2} rounded={3} bg="dark.50">
+                      <Text color="primary.500" fontWeight={300}>
+                        Contact
+                      </Text>
+                      <HStack p={3} space={3}>
+                        <Box
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 50,
+                            backgroundColor: theme.colors.muted["500"],
+                            borderWidth: 1,
+                            borderColor: theme.colors.primary["500"],
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <FaUser color={theme.colors.lightText} size={10} />
+                        </Box>
+                        <div className="d-flex flex-column align-content-center justify-content-center flex-grow-1">
+                          {listing && listing.listerObj ? (
+                            <Text fontSize={12} color="lightText">
+                              {listing.listerObj.firstName}{" "}
+                              {listing.listerObj.lastName}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                          {listing && listing.companyName ? (
+                            <Text fontSize={10} color="lightText">
+                              {listing.companyName}
+                            </Text>
+                          ) : (
+                            <Skeleton.Text p={3} />
+                          )}
+                        </div>
+                      </HStack>
+                    </VStack>
                   </div>
+                  <div
+                    className="py-3"
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div className="d-flex flex-column">
+                      <Text
+                        fontSize={20}
+                        fontWeight={300}
+                        color="secondary.800"
+                      >
+                        Raw Data
+                      </Text>
+                      <Text fontSize={14} color="muted.400">
+                        Here you can see the data as text as it is filled in.
+                      </Text>
+                    </div>
+                    <Button
+                      variant="subtle"
+                      onPress={() => setShowData(!showData)}
+                    >
+                      {showData ? "Hide Data" : "Show Data"}
+                    </Button>
+                  </div>
+                  <PresenceTransition
+                    visible={showData}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 500 } }}
+                  >
+                    <Text>
+                      {listing
+                        ? JSON.stringify(
+                            listing,
+                            [
+                              "phoneNumber",
+                              "companyName",
+                              "address",
+                              "city",
+                              "state",
+                              "zipCode",
+                              "beds",
+                              "baths",
+                              "propertyType",
+                              "acres",
+                              "yearBuilt",
+                              "arv",
+                              "occupancyStatus",
+                              "repairCost",
+                              "cap",
+                              "rent",
+                              "buyersFee",
+                              "noi",
+                              "images",
+                              "purchasePrice",
+                              "sqftHeated",
+                              "email",
+                              "comments",
+                              "firstName",
+                              "lastName",
+                            ],
+                            3
+                          )
+                        : "No Data to show yet"}
+                    </Text>
+                  </PresenceTransition>
                 </div>
               </div>
             </div>

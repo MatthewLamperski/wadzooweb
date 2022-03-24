@@ -7,12 +7,7 @@ import { AppContext } from "../../AppContext";
 import { FaPlusCircle, FaTasks } from "react-icons/all";
 import { FaChevronRight } from "react-icons/fa";
 const DataEntryDashboard = () => {
-  const { user } = useContext(AppContext);
-  useEffect(() => {
-    getDocs(collection(db, "users")).then((snapshot) => {
-      console.log("users", snapshot.docs.length);
-    });
-  }, []);
+  const { user, setError } = useContext(AppContext);
   const camelToWords = (text) => {
     const result = text.replace(/([A-Z])/g, " $1");
     return result.charAt(0).toUpperCase() + result.slice(1);
@@ -79,7 +74,15 @@ const DataEntryDashboard = () => {
             </Pressable>
           </Col>
           <Col className="my-3" xs={10} md={6}>
-            <Pressable style={styles.actionContainer} href="/manageListings">
+            <Pressable
+              style={styles.actionContainer}
+              onPress={() => {
+                setError({
+                  title: "This link has not been set up yet.",
+                  message: "It is coming soon!",
+                });
+              }}
+            >
               <div style={styles.titleContainer}>
                 <FaTasks
                   style={styles.iconStyle}
@@ -95,7 +98,7 @@ const DataEntryDashboard = () => {
                   information.
                 </Text>
               </div>
-              <Pressable style={styles.buttonContainer} href="/manageListings">
+              <Pressable style={styles.buttonContainer}>
                 <Text fontSize={18}>Go</Text>
                 <FaChevronRight color={theme.colors.secondary["800"]} />
               </Pressable>

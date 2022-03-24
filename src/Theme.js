@@ -156,6 +156,13 @@ export const appTheme = extendTheme({
         };
       },
     },
+    FormControlLabel: {
+      baseStyle: (props) => {
+        return {
+          fontWeight: 200,
+        };
+      },
+    },
   },
   config: {
     useSystemColorMode: true,

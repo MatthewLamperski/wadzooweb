@@ -17,6 +17,7 @@ import {
   setDoc,
   query,
   where,
+  addDoc,
 } from "firebase/firestore";
 import { db, secondaryApp } from "./App";
 import emailjs from "@emailjs/browser";
@@ -88,7 +89,7 @@ export const createUser = ({ firstName, lastName, email }) => {
           .then(() => {
             emailjs
               .send(
-                "gmail",
+                "wadzoo",
                 "wadzoo-account-creation",
                 {
                   email,
@@ -162,5 +163,40 @@ export const findUsersByEmail = (email) => {
       .catch((err) => {
         reject(err);
       });
+  });
+};
+
+export const createListing = (listing) => {
+  return new Promise((resolve, reject) => {
+    // Check if listing exists with that address
+    const q = query(
+      collection(db, "listings"),
+      where("lat", "==", listing.lat),
+      where("lng", "==", listing.lng)
+    );
+    getDocs(q)
+      .then((snapshot) => {
+        if (snapshot.empty) {
+          addDoc(collection(db, "listings"), listing)
+            .then((newDoc) => resolve(newDoc))
+            .catch((err) =>
+              reject({
+                title: "Something went wrong.",
+                message: "Here is the error: " + JSON.stringify(err),
+              })
+            );
+        } else {
+          reject({
+            title: "It looks like this listing already exists.",
+            message: "Contact Matthew if you see this message.",
+          });
+        }
+      })
+      .catch((err) =>
+        reject({
+          title: "Something went wrong.",
+          message: "Here is the error: " + JSON.stringify(err),
+        })
+      );
   });
 };
