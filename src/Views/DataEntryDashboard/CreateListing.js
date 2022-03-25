@@ -26,6 +26,7 @@ import {
   createListing,
   createUser,
   findUsersByEmail,
+  getProfilePicURL,
 } from "../../FirebaseInterface";
 import {
   FaBath,
@@ -41,6 +42,8 @@ import "./CreateListing.css";
 import { FaUser } from "react-icons/fa";
 import Geocode from "react-geocode";
 import ngeohash from "ngeohash";
+import AddCompanyLogo from "./AddCompanyLogo";
+import AddPropertyImages from "./AddPropertyImages";
 
 const propertyTypeVals = [
   "Single Family Residential",
@@ -81,11 +84,20 @@ const CreateListing = ({ setNavbarTransparent }) => {
   const [createLoading, setCreateLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [showData, setShowData] = useState(false);
+  const [listerPPUrl, setListerPPUrl] = useState();
 
   // Create New User State
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [newUser, setNewUser] = useState();
+
+  // Upload listerObj company logo
+  const [showCompanyLogoModal, setShowCompanyLogoModal] = useState(false);
+
+  // Upload property images
+  const [showImagesModal, setShowImagesModal] = useState(false);
+  const [tmpImage, setTmpImage] = useState();
+  const [uploadImages, setUploadImages] = useState();
 
   useEffect(() => {
     if (listerEmail) setEmailSearchLoading(true);
@@ -114,7 +126,21 @@ const CreateListing = ({ setNavbarTransparent }) => {
       document.getElementsByClassName("navbar").item(0).clientHeight
     );
   }, []);
+  useEffect(() => {
+    if (listing && listing.listerObj && listing.listerObj.uid) {
+      console.log("YEP");
+      getProfilePicURL(listing.listerObj.uid)
+        .then((url) => setListerPPUrl(url))
+        .catch((err) => {
+          setListerPPUrl(null);
+          console.log(err);
+        });
+    } else {
+      setListerPPUrl(undefined);
+    }
+  }, [listing]);
   const handleCreateListing = () => {
+    console.log(uploadImages);
     if (validated()) {
       if (!createLoading) {
         setCreateLoading(true);
@@ -138,19 +164,39 @@ const CreateListing = ({ setNavbarTransparent }) => {
               lng,
               created: new Date(),
             };
-            createListing(newListing)
-              .then((newDoc) => {
-                toast.success("Listing successfully uploading!");
-                setListing();
-                setListerEmail();
-                setEmailSearchResults();
-                setCreateLoading(false);
-                console.log(JSON.stringify(newDoc, null, 3));
-              })
-              .catch((err) => {
-                setCreateLoading(false);
-                setError(err);
-              });
+            if (uploadImages) {
+              createListing(newListing, uploadImages)
+                .then((newDoc) => {
+                  toast.success("Listing successfully uploading!");
+                  setListing();
+                  setListerEmail();
+                  setEmailSearchResults();
+                  setCreateLoading(false);
+                  setTmpImage();
+                  setUploadImages();
+                  console.log(JSON.stringify(newDoc, null, 3));
+                })
+                .catch((err) => {
+                  setCreateLoading(false);
+                  setError(err);
+                });
+            } else {
+              createListing(newListing)
+                .then((newDoc) => {
+                  toast.success("Listing successfully uploading!");
+                  setListing();
+                  setListerEmail();
+                  setEmailSearchResults();
+                  setCreateLoading(false);
+                  setTmpImage();
+                  setUploadImages();
+                  console.log(JSON.stringify(newDoc, null, 3));
+                })
+                .catch((err) => {
+                  setCreateLoading(false);
+                  setError(err);
+                });
+            }
           })
           .catch((err) => {
             setCreateLoading(false);
@@ -271,7 +317,10 @@ const CreateListing = ({ setNavbarTransparent }) => {
           propertyType: "Property type required",
         });
         return false;
-      } else if (listing.images === undefined || listing.images.length < 1) {
+      } else if (
+        !uploadImages &&
+        (listing.images === undefined || listing.images.length < 1)
+      ) {
         setFormErrors({
           images: "At least one image required",
         });
@@ -325,7 +374,10 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       <Text color="primary.500" fontWeight={300} fontSize={20}>
                         Create Listing
                       </Text>
-                      {listing && listing.listerObj && listing.email ? (
+                      {listing &&
+                      listing.listerObj &&
+                      listing.email &&
+                      listing.listerObj.uid ? (
                         <div className="py-3">
                           <div
                             className="py-2"
@@ -359,27 +411,71 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               display: "flex",
                               flexDirection: "column",
                               borderRadius: 8,
+                              borderWidth: 1,
+                              borderColor: theme.colors.primary["300"],
                               boxShadow:
                                 "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
                             }}
                           >
-                            <div
-                              className="p-2"
-                              style={{
-                                flexDirection: "column",
-                                display: "flex",
-                              }}
-                            >
-                              <HStack
-                                justifyContent="space-between"
-                                alignItems="center"
+                            <div className="d-flex flex-row justify-content-flex-start p-2 align-items-center">
+                              <Image
+                                key={listerPPUrl ? listerPPUrl : "wadzoo.com"}
+                                height={35}
+                                width={35}
+                                borderRadius={30}
+                                borderWidth={1}
+                                borderColor="primary.500"
+                                source={{
+                                  uri: listerPPUrl ? listerPPUrl : "wadzoo.com",
+                                }}
+                                fallbackElement={
+                                  <Box
+                                    style={{
+                                      width: 35,
+                                      height: 35,
+                                      borderRadius: 50,
+                                      backgroundColor:
+                                        theme.colors.muted["500"],
+                                      borderWidth: 1,
+                                      borderColor: theme.colors.primary["500"],
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <FaUser
+                                      color={theme.colors.lightText}
+                                      size={10}
+                                    />
+                                  </Box>
+                                }
+                              />
+                              <div
+                                className="p-2"
+                                style={{
+                                  flexDirection: "column",
+                                  display: "flex",
+                                }}
                               >
-                                <Text>{`${listing.listerObj.firstName} ${listing.listerObj.lastName}`}</Text>
-                                <FaCheck color={theme.colors.primary["500"]} />
-                              </HStack>
-                              <Text fontWeight={100}>{listing.email}</Text>
+                                <HStack
+                                  justifyContent="space-between"
+                                  alignItems="center"
+                                >
+                                  <Text>{`${listing.listerObj.firstName} ${listing.listerObj.lastName}`}</Text>
+                                </HStack>
+                                <Text fontWeight={100}>{listing.email}</Text>
+                              </div>
                             </div>
                           </Box>
+                          {listerPPUrl === null && (
+                            <Button
+                              my={2}
+                              variant="subtle"
+                              onPress={() => setShowCompanyLogoModal(true)}
+                            >
+                              Add Company Logo
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <div className="py-3">
@@ -891,127 +987,45 @@ const CreateListing = ({ setNavbarTransparent }) => {
                         )}
                       </FormControl>
                     </div>
-                    <div className="py-2">
-                      <Text
-                        fontSize={18}
-                        fontWeight={300}
-                        color="secondary.800"
-                      >
-                        Property Images:
-                      </Text>
-                      <FormControl
-                        isRequired
-                        isInvalid={"images" in formErrors}
-                        py={2}
-                      >
-                        <FormControl.Label>Images</FormControl.Label>
-                        <Input
-                          _invalid={{ borderColor: "red.500" }}
-                          onChangeText={(text) =>
-                            setListing((prevState) => ({
-                              ...prevState,
-                              images: [
-                                text,
-                                ...(prevState &&
-                                prevState.images &&
-                                prevState.images.slice(1)
-                                  ? prevState.images.slice(1)
-                                  : []),
-                              ],
-                            }))
-                          }
-                          value={
+                    <div className="py-2 d-flex flex-column">
+                      <div className="d-flex flex-row align-items-center justify-content-between">
+                        <Text
+                          fontSize={18}
+                          fontWeight={300}
+                          color="secondary.800"
+                        >
+                          Property Images:
+                        </Text>
+                        <Text
+                          fontSize={16}
+                          fontWeight={300}
+                          color={
                             listing &&
                             listing.images &&
-                            listing.images.length !== 0
-                              ? listing.images[0]
-                              : ""
+                            listing.images.length >= 1
+                              ? "primary.500"
+                              : uploadImages && uploadImages.length >= 1
+                              ? "primary.500"
+                              : "red.500"
                           }
-                          placeholder="URL"
-                          variant="outline"
-                          size="sm"
-                        />
-                        {listing &&
-                          listing.images &&
-                          listing.images.length > 1 &&
-                          listing.images.slice(1).map((imageURL, idx) => (
-                            <div
-                              className="py-2"
-                              key={idx}
-                              style={{
-                                justifyContent: "center",
-                                alignItems: "center",
-                                display: "flex",
-                                flexDirection: "row",
-                              }}
-                            >
-                              <Input
-                                _invalid={{ borderColor: "red.500" }}
-                                onChangeText={(text) =>
-                                  setListing((prevState) => ({
-                                    ...prevState,
-                                    images: [
-                                      ...prevState.images.slice(0, idx + 1),
-                                      text,
-                                      ...prevState.images.slice(idx + 2),
-                                    ],
-                                  }))
-                                }
-                                value={listing.images[idx + 1]}
-                                placeholder="URL"
-                                variant="outline"
-                                size="sm"
-                              />
-                              <Pressable
-                                p={2}
-                                onPress={() => {
-                                  setListing((prevState) => ({
-                                    ...prevState,
-                                    images: [
-                                      ...prevState.images.slice(0, idx + 1),
-                                      ...prevState.images.slice(idx + 2),
-                                    ],
-                                  }));
-                                }}
-                              >
-                                <FaTimes color={theme.colors.red["500"]} />
-                              </Pressable>
-                            </div>
-                          ))}
-                        <Button
-                          my={3}
-                          variant="subtle"
-                          onPress={() => {
-                            if (
-                              listing &&
-                              listing.images &&
-                              listing.images[0]
-                            ) {
-                              setListing((prevState) => ({
-                                ...prevState,
-                                images: [...prevState.images, ""],
-                              }));
-                            } else {
-                              setError({
-                                title: "Add a URL first.",
-                                message:
-                                  "Add the first URL first, then you can add additional URLs",
-                              });
-                            }
-                          }}
                         >
-                          Add Another URL
-                        </Button>
-                        {"images" in formErrors ? (
-                          <FormControl.ErrorMessage>
-                            {formErrors.images}
-                          </FormControl.ErrorMessage>
-                        ) : (
-                          <FormControl.HelperText>
-                            At least one image is required, the more the better!
-                          </FormControl.HelperText>
-                        )}
-                      </FormControl>
+                          {uploadImages
+                            ? uploadImages.length
+                            : listing && listing.images
+                            ? `${listing.images.length}`
+                            : "None"}
+                        </Text>
+                      </div>
+                      <Text fontSize={12} color="muted.400">
+                        At least one image required, the more the better!
+                      </Text>
+                      <Button
+                        my={3}
+                        onPress={() => setShowImagesModal(true)}
+                        variant="subtle"
+                      >
+                        Add Property Images
+                      </Button>
                       <div className="py-2">
                         <Text
                           fontSize={18}
@@ -1292,15 +1306,18 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       >
                         <Image
                           key={
-                            listing && listing.images && listing.images[0]
+                            tmpImage
+                              ? tmpImage
+                              : listing && listing.images && listing.images[0]
                               ? listing.images[0]
                               : "wadzoo.com"
                           }
                           source={{
-                            uri:
-                              listing && listing.images && listing.images[0]
-                                ? listing.images[0]
-                                : "wadzoo.com",
+                            uri: tmpImage
+                              ? tmpImage
+                              : listing && listing.images && listing.images[0]
+                              ? listing.images[0]
+                              : "wadzoo.com",
                           }}
                           alt="Listing Image"
                           resizeMode="cover"
@@ -1714,21 +1731,38 @@ const CreateListing = ({ setNavbarTransparent }) => {
                         Contact
                       </Text>
                       <HStack p={3} space={3}>
-                        <Box
-                          style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 50,
-                            backgroundColor: theme.colors.muted["500"],
-                            borderWidth: 1,
-                            borderColor: theme.colors.primary["500"],
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
+                        <Image
+                          key={listerPPUrl ? listerPPUrl : "wadzoo.com"}
+                          height={30}
+                          width={30}
+                          borderRadius={30}
+                          borderWidth={1}
+                          borderColor="primary.500"
+                          source={{
+                            uri: listerPPUrl ? listerPPUrl : "wadzoo.com",
                           }}
-                        >
-                          <FaUser color={theme.colors.lightText} size={10} />
-                        </Box>
+                          fallbackElement={
+                            <Box
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: 50,
+                                backgroundColor: theme.colors.muted["500"],
+                                borderWidth: 1,
+                                borderColor: theme.colors.primary["500"],
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <FaUser
+                                color={theme.colors.lightText}
+                                size={10}
+                              />
+                            </Box>
+                          }
+                        />
+
                         <div className="d-flex flex-column align-content-center justify-content-center flex-grow-1">
                           {listing && listing.listerObj ? (
                             <Text fontSize={12} color="lightText">
@@ -1821,6 +1855,35 @@ const CreateListing = ({ setNavbarTransparent }) => {
                 </div>
               </div>
             </div>
+            <Modal
+              isOpen={showCompanyLogoModal}
+              onClose={() => setShowCompanyLogoModal(false)}
+              _backdrop={{ bg: "warmGray.500" }}
+              size="xl"
+            >
+              {listing && listing.listerObj && listing.listerObj.uid ? (
+                <AddCompanyLogo
+                  uid={listing.listerObj.uid}
+                  setListerPPUrl={setListerPPUrl}
+                  setShowCompanyLogoModal={setShowCompanyLogoModal}
+                />
+              ) : (
+                <Text>There is no lister... Refresh and try again</Text>
+              )}
+            </Modal>
+            <Modal
+              isOpen={showImagesModal}
+              onClose={() => setShowImagesModal(false)}
+              _backdrop={{ bg: "warmGray.500" }}
+              size="xl"
+            >
+              <AddPropertyImages
+                setShowImagesModal={setShowImagesModal}
+                setTmpImage={setTmpImage}
+                setListing={setListing}
+                setUploadImages={setUploadImages}
+              />
+            </Modal>
             <Modal
               isOpen={showCreateUserModal}
               onClose={() => setShowCreateUserModal(false)}

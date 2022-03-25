@@ -9,6 +9,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 
+import { getStorage, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import {
   doc,
   getDoc,
@@ -18,6 +19,8 @@ import {
   query,
   where,
   addDoc,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { db, secondaryApp } from "./App";
 import emailjs from "@emailjs/browser";
@@ -149,7 +152,7 @@ export const findUsersByEmail = (email) => {
   return new Promise((resolve, reject) => {
     const q = query(
       collection(db, "users"),
-      where("email", ">=", email.toLowerCase()),
+      where("email", ">=", email),
       where("email", "<=", email + "\uf8ff")
     );
     getDocs(q)
@@ -166,9 +169,10 @@ export const findUsersByEmail = (email) => {
   });
 };
 
-export const createListing = (listing) => {
+export const createListing = (listing, images) => {
   return new Promise((resolve, reject) => {
     // Check if listing exists with that address
+    const storage = getStorage();
     const q = query(
       collection(db, "listings"),
       where("lat", "==", listing.lat),
@@ -177,14 +181,79 @@ export const createListing = (listing) => {
     getDocs(q)
       .then((snapshot) => {
         if (snapshot.empty) {
+          // Add doc to db
           addDoc(collection(db, "listings"), listing)
-            .then((newDoc) => resolve(newDoc))
-            .catch((err) =>
+            .then((newListingDoc) => {
+              updateDoc(doc(db, `/users/${listing.lister}`), {
+                listings: arrayUnion(newListingDoc.id),
+              })
+                .then(() => {
+                  if (images) {
+                    let imageUploads = [];
+                    for (let i = 0; i < images.length; i++) {
+                      uploadBytes(
+                        ref(
+                          storage,
+                          `/listings/${newListingDoc.id}/${newListingDoc.id}${i}`
+                        ),
+                        images[i]
+                      )
+                        .then(() => {
+                          getDownloadURL(
+                            ref(
+                              storage,
+                              `/listings/${newListingDoc.id}/${newListingDoc.id}${i}`
+                            )
+                          ).then((url) => {
+                            imageUploads.push(url);
+                            if (imageUploads.length === images.length) {
+                              updateDoc(
+                                doc(db, `/listings/${newListingDoc.id}`),
+                                { images: imageUploads }
+                              )
+                                .then((listingDocWithImages) => {
+                                  resolve(listingDocWithImages);
+                                })
+                                .catch((err) => {
+                                  console.log("4", err);
+                                  reject({
+                                    title: "Something went wrong.",
+                                    message:
+                                      "Here is the error: " +
+                                      JSON.stringify(err),
+                                  });
+                                });
+                            }
+                          });
+                        })
+                        .catch((err) => {
+                          console.log("1", err);
+                          reject({
+                            title: "Something went wrong.",
+                            message:
+                              "Here is the error: " + JSON.stringify(err),
+                          });
+                        });
+                    }
+                  } else {
+                    resolve(newListingDoc);
+                  }
+                })
+                .catch((err) => {
+                  console.log("2", err);
+                  reject({
+                    title: "Something went wrong.",
+                    message: "Here is the error: " + JSON.stringify(err),
+                  });
+                });
+            })
+            .catch((err) => {
+              console.log("3", err);
               reject({
                 title: "Something went wrong.",
                 message: "Here is the error: " + JSON.stringify(err),
-              })
-            );
+              });
+            });
         } else {
           reject({
             title: "It looks like this listing already exists.",
@@ -192,11 +261,35 @@ export const createListing = (listing) => {
           });
         }
       })
-      .catch((err) =>
+      .catch((err) => {
+        console.log("1", err);
         reject({
           title: "Something went wrong.",
           message: "Here is the error: " + JSON.stringify(err),
-        })
-      );
+        });
+      });
+  });
+};
+
+export const getProfilePicURL = (uid) => {
+  return new Promise((resolve, reject) => {
+    const storage = getStorage();
+    const pictureRef = ref(storage, `/profilePictures/${uid}`);
+    getDownloadURL(pictureRef)
+      .then((url) => resolve(url))
+      .catch((err) => reject(err));
+  });
+};
+
+export const uploadProfilePic = (uid, image) => {
+  return new Promise((resolve, reject) => {
+    const storage = getStorage();
+    uploadBytes(ref(storage, `/profilePictures/${uid}`), image)
+      .then((res) => {
+        getDownloadURL(res.ref)
+          .then((url) => resolve(url))
+          .catch((err) => reject(err));
+      })
+      .catch((err) => reject(err));
   });
 };
