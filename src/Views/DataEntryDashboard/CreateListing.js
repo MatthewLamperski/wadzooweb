@@ -159,6 +159,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
             delete tmpListing.listerObj;
             const newListing = {
               ...tmpListing,
+              environment: "production",
               geohash,
               lat,
               lng,
