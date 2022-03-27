@@ -12,7 +12,7 @@ import {
 import { AppContext } from "../AppContext";
 import { deviceType } from "./LandingPage";
 
-const PortalAuth = ({ setNavbarTransparent }) => {
+const PortalAuth = ({ setNavbarTransparent, text }) => {
   const { setError } = useContext(AppContext);
   const [navbarHeight, setnavbarHeight] = useState();
   const [email, setEmail] = useState();
@@ -126,7 +126,9 @@ const PortalAuth = ({ setNavbarTransparent }) => {
       style={{
         minHeight: "100vh",
         alignItems: "center",
+        justifyContent: "center",
         paddingTop: navbarHeight,
+        display: "flex",
       }}
     >
       <Container
@@ -154,7 +156,7 @@ const PortalAuth = ({ setNavbarTransparent }) => {
             Log In
           </Text>
           <Text px={3} fontSize={18} color="muted.500">
-            Access your Wadzoo portal here.
+            {text ? text : "Access your Wadzoo portal here."}
           </Text>
           <div className="py-5">
             <Button

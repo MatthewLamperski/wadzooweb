@@ -27,6 +27,8 @@ import LoadingScreen from "./Views/LoadingScreen";
 import { getUserDoc } from "./FirebaseInterface";
 import CreateListing from "./Views/DataEntryDashboard/CreateListing";
 import ManageListings from "./Views/DataEntryDashboard/ManageListings";
+import ListingView from "./Views/ListingView";
+import Checkout from "./Routes/Checkout";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -67,12 +69,6 @@ function App() {
           })
           .catch((err) => {
             console.log(err);
-            setError({
-              title: "Something went wrong.",
-              message: `We couldn't connect. Try again later and contact development if issue persists. Error: ${JSON.stringify(
-                err
-              )}`,
-            });
           });
       } else {
         setUser(null);
@@ -160,7 +156,22 @@ function App() {
                 <CreateListing setNavbarTransparent={setNavbarTransparent} />
               }
             />
-            <Route path="/manageListings" element={<ManageListings />} />
+            <Route
+              path="/manageListings"
+              element={
+                <ManageListings setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
+              path="/listings/:docID"
+              element={
+                <ListingView setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
+              path="/checkout/:service"
+              element={<Checkout setNavbarTransparent={setNavbarTransparent} />}
+            />
           </Routes>
           <Footer />
           <ToastContainer hideProgressBar />

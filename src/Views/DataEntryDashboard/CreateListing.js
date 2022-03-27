@@ -298,11 +298,6 @@ const CreateListing = ({ setNavbarTransparent }) => {
           baths: "Baths required",
         });
         return false;
-      } else if (listing.acres === undefined) {
-        setFormErrors({
-          acres: "Acres required",
-        });
-        return false;
       } else if (listing.sqftHeated === undefined) {
         setFormErrors({
           sqftHeated: "Sqft Heated required",
@@ -338,8 +333,8 @@ const CreateListing = ({ setNavbarTransparent }) => {
     }
   };
   const theme = useTheme();
-  if (user) {
-    if ((user.role && user.role === "dataEntry") || user.role === "admin") {
+  if (user && user.role) {
+    if (user.role === "dataEntry" || user.role === "admin") {
       return (
         <PresenceTransition
           visible
@@ -359,7 +354,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                 style={{
                   position: "relative",
                   display: "flex",
-                  width: 300,
+                  width: "40%",
                 }}
               >
                 <div
@@ -856,14 +851,9 @@ const CreateListing = ({ setNavbarTransparent }) => {
 
                       <Row>
                         <Col>
-                          <FormControl
-                            isRequired
-                            isInvalid={"acres" in formErrors}
-                            py={2}
-                          >
+                          <FormControl py={2}>
                             <FormControl.Label>Acres</FormControl.Label>
                             <Input
-                              _invalid={{ borderColor: "red.500" }}
                               onChangeText={(text) =>
                                 setListing((prevState) => ({
                                   ...prevState,
@@ -877,15 +867,9 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               variant="outline"
                               size="sm"
                             />
-                            {"acres" in formErrors ? (
-                              <FormControl.ErrorMessage>
-                                {formErrors.acres}
-                              </FormControl.ErrorMessage>
-                            ) : (
-                              <FormControl.HelperText>
-                                Decimals Allowed
-                              </FormControl.HelperText>
-                            )}
+                            <FormControl.HelperText>
+                              Decimals Allowed
+                            </FormControl.HelperText>
                           </FormControl>
                         </Col>
                         <Col>
@@ -1144,7 +1128,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             size="sm"
                           />
                           <FormControl.HelperText>
-                            Only numbers, no commas or dollar signs
+                            You can input a percentage here, just add '%'
                           </FormControl.HelperText>
                         </FormControl>
                         <FormControl py={2}>
@@ -1648,7 +1632,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               color="lightText"
                               fontWeight={100}
                             >
-                              ${Number(listing.buyersFee).toLocaleString()}
+                              {listing.buyersFee}
                             </Text>
                           ) : (
                             <Skeleton.Text p={3} />
@@ -1993,6 +1977,8 @@ const CreateListing = ({ setNavbarTransparent }) => {
     } else {
       return <AccessDenied />;
     }
+  } else if (user === null) {
+    return <AccessDenied />;
   } else {
     return <LoadingScreen setNavbarTransparent={setNavbarTransparent} />;
   }

@@ -1,0 +1,8 @@
+.animate-shadow {
+    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: none;
+}
+
+.animate-shadow:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09);
+}

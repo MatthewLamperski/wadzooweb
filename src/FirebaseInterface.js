@@ -21,6 +21,9 @@ import {
   addDoc,
   updateDoc,
   arrayUnion,
+  orderBy,
+  limit,
+  startAfter,
 } from "firebase/firestore";
 import { db, secondaryApp } from "./App";
 import emailjs from "@emailjs/browser";
@@ -166,6 +169,65 @@ export const findUsersByEmail = (email) => {
       .catch((err) => {
         reject(err);
       });
+  });
+};
+
+export const getProdListings = (lastVisible) => {
+  return new Promise((resolve, reject) => {
+    const q = lastVisible
+      ? query(
+          collection(db, "listings"),
+          where("environment", "==", "production"),
+          orderBy("created", "desc"),
+          startAfter(lastVisible),
+          limit(30)
+        )
+      : query(
+          collection(db, "listings"),
+          where("environment", "==", "production"),
+          orderBy("created", "desc"),
+          limit(30)
+        );
+    getDocs(q)
+      .then((snapshot) => {
+        if (!snapshot.empty) {
+          let listings = snapshot.docs.map((listingDoc) => ({
+            docID: listingDoc.id,
+            ...listingDoc.data(),
+          }));
+          resolve({
+            listings,
+            lastVisible: snapshot.docs[snapshot.docs.length - 1]
+              ? snapshot.docs.length < 30
+                ? null
+                : snapshot.docs[snapshot.docs.length - 1]
+              : null,
+          });
+        } else {
+          resolve({
+            listings: [],
+            lastVisible: null,
+          });
+        }
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const getListing = (docID) => {
+  return new Promise((resolve, reject) => {
+    getDoc(doc(db, `/listings/${docID}`))
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          resolve({
+            docID: snapshot.id,
+            ...snapshot.data(),
+          });
+        } else {
+          reject(".exists() false");
+        }
+      })
+      .catch((err) => reject(err));
   });
 };
 

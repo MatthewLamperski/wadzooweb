@@ -18,10 +18,6 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      },
       { "source": "/app/**", "dynamicLinks": true },
       {
         "source": "/api/hello",
@@ -30,6 +26,10 @@
       {
         "source": "/api/iaphub",
         "function": "iaphubSubscriptionNoty"
+      },
+      {
+        "source": "!/api/**",
+        "destination": "/index.html"
       }
     ]
   },

@@ -74,15 +74,7 @@ const DataEntryDashboard = () => {
             </Pressable>
           </Col>
           <Col className="my-3" xs={10} md={6}>
-            <Pressable
-              style={styles.actionContainer}
-              onPress={() => {
-                setError({
-                  title: "This link has not been set up yet.",
-                  message: "It is coming soon!",
-                });
-              }}
-            >
+            <Pressable style={styles.actionContainer} href="/manageListings">
               <div style={styles.titleContainer}>
                 <FaTasks
                   style={styles.iconStyle}
