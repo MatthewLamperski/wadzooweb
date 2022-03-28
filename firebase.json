@@ -18,7 +18,10 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      { "source": "/app/**", "dynamicLinks": true },
+      {
+        "source": "/app/**",
+        "dynamicLinks": true
+      },
       {
         "source": "/api/hello",
         "function": "helloWorld"
@@ -26,6 +29,10 @@
       {
         "source": "/api/iaphub",
         "function": "iaphubSubscriptionNoty"
+      },
+      {
+        "source": "/api/create_link_token",
+        "function": "generateLinkToken"
       },
       {
         "source": "!/api/**",
