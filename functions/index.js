@@ -79,6 +79,7 @@ exports.deleteListingsCount = functions.firestore
 
 /**
  * This function will generate a link token for Plaid
+ * to be exchanged for a public token -> access_token
  */
 
 const configuration = new Configuration({
@@ -121,6 +122,53 @@ exports.generateLinkToken = functions.https.onRequest((request, response) => {
           .catch((err) => {
             functions.logger.log("ERROR", err);
             response.json(err);
+          });
+    }
+  });
+});
+
+/**
+ * This function receives an public token and exchanges
+ * for an access token
+ */
+
+exports.getAccessToken = functions.https.onRequest((req, res) => {
+  functions.logger.log("NEW ACCESS TOKEN REQUEST");
+  cors(req, res, () => {
+    if (req.method === "POST") {
+      const publicToken = req.body.publicToken;
+      const plaidRequest = {
+        public_token: publicToken,
+      };
+      client
+          .itemPublicTokenExchange(plaidRequest)
+          .then((response) => {
+            res.json(response.data);
+          })
+          .catch((err) => {
+            functions.logger.log("ERROR", err);
+            res.json(err);
+          });
+    }
+  });
+});
+
+exports.getAccounts = functions.https.onRequest((req, res) => {
+  functions.logger.log("NEW ACCOUNTS REQUEST");
+  cors(req, res, () => {
+    if (req.method === "POST") {
+      const accessToken = req.body.accessToken;
+      const plaidRequest = {
+        access_token: accessToken,
+      };
+      client
+          .accountsBalanceGet(plaidRequest)
+          .then((response) => {
+            res.json(response.data);
+          })
+          .catch((err) => {
+            functions.logger.log("ERROR", err);
+            res.json(err);
           });
     }
   });

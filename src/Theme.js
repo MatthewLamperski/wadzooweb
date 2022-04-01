@@ -96,6 +96,7 @@ export const appTheme = extendTheme({
           my: 3,
           shadow: 5,
           rounded: "sm",
+          _text: { fontWeight: 200 },
         },
         subtle: {
           _text: { fontWeight: 200, fontSize: "sm" },

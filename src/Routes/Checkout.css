@@ -26,3 +26,12 @@
     display: inline-block;
     vertical-align: middle;
 }
+
+.fade {
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.fade.out {
+    opacity: 0;
+}

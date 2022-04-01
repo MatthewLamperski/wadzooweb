@@ -1,5 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Button, PresenceTransition, Text, useTheme } from "native-base";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import {
+  Button,
+  PresenceTransition,
+  Spinner,
+  Text,
+  useTheme,
+} from "native-base";
 import { Container } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
@@ -7,8 +13,9 @@ import LoadingScreen from "../Views/LoadingScreen";
 import PortalAuth from "./PortalAuth";
 import { deviceType } from "./LandingPage";
 import "./Checkout.css";
-import { FaCheck } from "react-icons/all";
+import { FaCertificate, FaCheck, FaFile } from "react-icons/all";
 import { usePlaidLink } from "react-plaid-link";
+import PlaidLogo from "../Assets/svgs/PlaidLogo.svg";
 
 const headers = {
   "Content-Type": "application/json",
@@ -25,90 +32,375 @@ const Checkout = ({ setNavbarTransparent }) => {
   }, []);
 
   const { service } = useParams();
-  const { user } = useContext(AppContext);
+  const { user, setError } = useContext(AppContext);
   const theme = useTheme();
   const [step, setStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [linkToken, setLinkToken] = useState(null);
+  const [accounts, setAccounts] = useState();
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [hideLink, setHideLink] = useState(false);
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
   const generateToken = async () => {
-    console.log(user.uid);
-    const response = await fetch("https://wadzoo.com/api/create_link_token", {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({
-        uid: user.uid,
-      }),
-    });
-    const data = await response.json();
-    setLinkToken(data.link_token);
-    console.log("PLAID DATA", data);
+    try {
+      const response = await fetch("https://wadzoo.com/api/create_link_token", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          uid: user.uid,
+        }),
+      });
+      const data = await response.json();
+      setLinkToken(data.link_token);
+    } catch (err) {
+      setError({
+        title: "We couldn't connect to the internet.",
+        message: "Please try again later.",
+      });
+    }
   };
   useEffect(() => {
     if (user) {
       generateToken();
     }
   }, [user]);
+  useEffect(() => {
+    if (accounts) {
+      if (balanceisApproved(accounts)) {
+        setCompletedSteps((prevState) => [...prevState, 1]);
+      }
+    }
+  }, [accounts]);
   const hideOnMobile = () => {
     return deviceType() === "iOS" || deviceType() === "android";
   };
+  const balanceisApproved = (accounts) => {
+    let threshold = service === "verifyIntermediate" ? 300000 : 500000;
+    let balanceSum = Number(
+      accounts
+        .map((account) => account.balances.current)
+        .reduce((partialSum, num) => partialSum + num, 0)
+    );
+    if (balanceSum >= threshold) {
+      return true;
+    } else {
+      return false;
+    }
+  };
   const StepOne = () => {
     return (
-      <PresenceTransition
-        visible={step === 1}
-        initial={{ opacity: 0, translateX: 30 }}
-        animate={{ opacity: 1, translateX: 0, transition: { duration: 300 } }}
-      >
-        <div className="d-flex flex-column justify-content-start align-items-start py-4">
-          <Text fontWeight={300} fontSize={22} color="secondary.800">
-            Step 1
-          </Text>
-          <Text fontSize={18} color="muted.400">
-            Verify funding of at least $
-            {service === "verifyAdvanced" ? "500" : "300"}k with Plaid
-          </Text>
-          <PlaidLink linkToken={linkToken} />
+      <div className="d-flex flex-column flex-grow-1 justify-content-center align-items-start p-4">
+        <div className="py-4">
+          <a
+            style={{ textDecoration: "none" }}
+            target="_blank"
+            href="https://plaid.com"
+          >
+            <Text underline color="muted.500">
+              Asset Verification by
+            </Text>
+            <img
+              src={PlaidLogo}
+              style={{
+                width: 60,
+                height: undefined,
+                aspectRatio: "2.625",
+                resizeMode: "contain",
+                marginLeft: 5,
+              }}
+            />
+          </a>
         </div>
-      </PresenceTransition>
+        <PresenceTransition
+          visible={!loadingAccounts && accounts === undefined}
+          initial={{ opacity: 1 }}
+          animate={{ transition: { duration: 500 } }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="d-flex flex-column">
+            <Text pb={3} fontWeight={300} fontSize={24} color="secondary.800">
+              First, lets verify your funding.
+            </Text>
+            <Text fontSize={18} color="muted.500">
+              Wadzoo uses Plaid to verify you have access to at least $
+              {service === "verifyAdvanced" ? "500" : "300"}k. We never access
+              your bank account credentials.
+            </Text>
+          </div>
+        </PresenceTransition>
+        {loadingAccounts ? (
+          <div
+            style={{ width: "100%" }}
+            className="d-flex flex-column p-4 justify-content-center align-items-center"
+          >
+            <Spinner size="lg" color="primary.500" />
+            <Text my={4} color="primary.700" fontSize={16}>
+              Loading balance information...
+            </Text>
+          </div>
+        ) : (
+          accounts && (
+            <div className="d-flex flex-column pb-3">
+              <Text color="secondary.800" fontSize={28} fontWeight={300}>
+                Your total assets:{" "}
+                {formatter.format(
+                  Number(
+                    accounts
+                      .map((account) => account.balances.current)
+                      .reduce((partialSum, num) => partialSum + num, 0)
+                  )
+                )}
+              </Text>
+              <Text
+                color={
+                  balanceisApproved(accounts) ? "primary.600" : "error.500"
+                }
+                pt={2}
+                fontSize={18}
+              >
+                {balanceisApproved(accounts)
+                  ? `Your total balance meets the requirements for the ${
+                      service === "verifyAdvanced" ? "Advanced" : "Intermediate"
+                    } badge!`
+                  : `Your total balance does not meet the requirements for the ${
+                      service === "verifyAdvanced" ? "Advanced" : "Intermediate"
+                    } badge.`}
+              </Text>
+              {!balanceisApproved(accounts) && (
+                <Text py={3}>
+                  {`Wadzoo requires access to at least $${
+                    service === "verifyAdvanced" ? "500,000" : "300,000"
+                  } for an ${
+                    service === "verifyAdvanced" ? "Advanced" : "Intermediate"
+                  } badge.`}
+                </Text>
+              )}
+              {balanceisApproved(accounts) && (
+                <div className="d-flex pt-2">
+                  <Button
+                    px={5}
+                    rounded="3xl"
+                    onPress={() =>
+                      completedSteps.includes(2) ? setStep(3) : setStep(2)
+                    }
+                  >
+                    Next Step
+                  </Button>
+                </div>
+              )}
+            </div>
+          )
+        )}
+        {!hideLink && (
+          <div
+            className="d-flex justify-content-start align-items-center pt-5"
+            style={{ width: "100%" }}
+          >
+            <PlaidLink
+              setHideLink={setHideLink}
+              setLoadingAccounts={setLoadingAccounts}
+              setAccounts={setAccounts}
+              linkToken={linkToken}
+            />
+          </div>
+        )}
+      </div>
     );
   };
+
   const StepTwo = () => {
+    const [dragging, setDragging] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState();
+    const [requestSent, setRequestSent] = useState(false);
+    let dragCounter = 0;
+    const dropRef = useRef(null);
+
+    const handleDrag = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const handleDragIn = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter++;
+      if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+        setDragging(true);
+      }
+    };
+    const handleDragOut = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter--;
+      if (dragCounter > 0) return;
+      setDragging(false);
+    };
+    const handleDrop = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragging(false);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        setSelectedFiles(e.dataTransfer.files);
+        e.dataTransfer.clearData();
+        dragCounter = 0;
+      }
+    };
+    useEffect(() => {
+      let div = dropRef.current;
+      div.addEventListener("dragenter", handleDragIn);
+      div.addEventListener("dragleave", handleDragOut);
+      div.addEventListener("dragover", handleDrag);
+      div.addEventListener("drop", handleDrop);
+
+      return () => {
+        if (div) {
+          div.removeEventListener("dragenter", handleDragIn);
+          div.removeEventListener("dragleave", handleDragOut);
+          div.removeEventListener("dragover", handleDrag);
+          div.removeEventListener("drop", handleDrop);
+        }
+      };
+    }, []);
+
     return (
-      <PresenceTransition
-        visible={step === 2}
-        initial={{ opacity: 0, translateX: 30 }}
-        animate={{ opacity: 1, translateX: 0, transition: { duration: 300 } }}
+      <div
+        style={{
+          height: "100%",
+          display: "flex",
+          width: "100%",
+        }}
+        className="d-flex flex-column flex-grow-1 justify-content-start align-items-start p-4"
       >
-        <div className="d-flex flex-column justify-content-start align-items-start py-4">
-          <Text fontWeight={300} fontSize={22} color="secondary.800">
-            Step 2
-          </Text>
-          <Text fontSize={18} color="muted.400">
-            Verify you have completed{" "}
-            {service === "verifyAdvanced" ? "50+" : "10 - 15"} deals
-          </Text>
-        </div>
-      </PresenceTransition>
+        <Text pb={3} fontWeight={300} fontSize={24} color="secondary.800">
+          Next, let's verify your deals.
+        </Text>
+        <Text fontSize={14} color="muted.400">
+          For the {service === "verifyAdvanced" ? "Advanced" : "Intermediate"}{" "}
+          badge, you'll need to have completed{" "}
+          {service === "verifyAdvanced" ? "at least 50" : "10-49"} deals. You
+          can provide proof by uploading files, or you can get in touch with our
+          verification team.
+        </Text>
+        {(selectedFiles && selectedFiles.length) || requestSent ? (
+          <div className="py-4 d-flex flex-column">
+            {selectedFiles && selectedFiles.length ? (
+              <Text fontWeight={300} fontSize={18} color="secondary.800">
+                {selectedFiles.length} Files selected
+              </Text>
+            ) : (
+              <Text fontWeight={300} fontSize={18} color="secondary.800">
+                Your request will be sent in the next step!
+              </Text>
+            )}
+            <div className="d-flex">
+              <Button
+                size="sm"
+                px={4}
+                rounded="3xl"
+                onPress={() => {
+                  setCompletedSteps((prevState) => [...prevState, 2]);
+                  setStep(3);
+                }}
+              >
+                Next Step
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="d-flex flex-column justify-content-center align-items-center py-3"
+            style={{ width: "100%", height: "100%", flex: 1 }}
+          >
+            <div
+              ref={dropRef}
+              className="d-flex flex-column justify-content-center align-items-center m-1"
+              style={{
+                backgroundColor: dragging
+                  ? theme.colors.primary["50"]
+                  : "transparent",
+                flex: 2,
+                width: "100%",
+                borderRadius: 8,
+                border: `2px dotted ${theme.colors.secondary["800"]}`,
+                paddingTop: 40,
+                paddingBottom: 40,
+                boxShadow: dragging
+                  ? "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)"
+                  : "none",
+              }}
+            >
+              <FaFile color={theme.colors.secondary["800"]} size={40} />
+              {selectedFiles && selectedFiles.length ? (
+                <Text p={3} fontSize={14} color="secondary.800">
+                  {selectedFiles.length} Files
+                </Text>
+              ) : (
+                <Text p={3} fontSize={14} color="secondary.800">
+                  Drop your files here, or{" "}
+                  <label
+                    style={{
+                      display: "inline-block",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/png image/jpeg"
+                      style={{ display: "none" }}
+                      onChange={({ target }) => {
+                        setSelectedFiles(target.files);
+                      }}
+                    />
+                    <Text color="primary.600">Browse</Text>
+                  </label>
+                </Text>
+              )}
+            </div>
+            <div
+              className="d-flex flex-column justify-content-center align-items-start px-2"
+              style={{
+                flex: 1,
+                width: "100%",
+                paddingTop: 20,
+                paddingBottom: 20,
+              }}
+            >
+              <Text fontWeight={300} fontSize={16} color="secondary.800">
+                Or, you can request a call from our verification team.
+              </Text>
+              <Button
+                rounded="3xl"
+                px={4}
+                size="sm"
+                onPress={() => {
+                  setRequestSent(true);
+                }}
+              >
+                Request
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
   const StepThree = () => {
     return (
-      <PresenceTransition
-        visible={step === 3}
-        initial={{ opacity: 0, translateX: 30 }}
-        animate={{ opacity: 1, translateX: 0, transition: { duration: 300 } }}
-      >
-        <div className="d-flex flex-column justify-content-start align-items-start py-4">
-          <Text fontWeight={300} fontSize={22} color="secondary.800">
-            Step 3
-          </Text>
-          <Text fontSize={18} color="muted.400">
-            Sumbit your information for verification.
-          </Text>
-        </div>
-      </PresenceTransition>
+      <div className="d-flex flex-column flex-grow-1 justify-content-start align-items-start p-4">
+        <Text pb={3} fontWeight={300} fontSize={24} color="secondary.800">
+          Finally, we'll submit all this info.
+        </Text>
+        <Text fontSize={18} color="muted.400">
+          Sumbit your information for verification.
+        </Text>
+      </div>
     );
   };
+
   if (user) {
     return (
       <PresenceTransition
@@ -127,25 +419,32 @@ const Checkout = ({ setNavbarTransparent }) => {
           }}
         >
           <Container
-            className="mt-5 mb-3 p-4"
+            className="py-4"
             style={{
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              alignItems: "flex-start",
+              justifyContent: "start",
+              alignItems: "start",
               display: "flex",
-              borderRadius: 8,
+              flexDirection: "column",
             }}
           >
-            <Text fontWeight={300} color="secondary.800" fontSize={22}>
-              Welcome, {user.firstName}
-            </Text>
-            <Text fontSize={18} color="muted.400">
-              Let's get your account verified for the{" "}
-              {service === "verifyAdvanced" ? "Advanced" : "Intermediate"}{" "}
-              Badge.
-            </Text>
+            <div className="d-flex flex-row align-items-center">
+              <FaCertificate color={theme.colors.secondary["800"]} size={20} />
+              <Text
+                px={2}
+                py={0}
+                fontSize={18}
+                fontWeight={300}
+                color="secondary.800"
+              >
+                {service === "verifyAdvanced" ? "Advanced " : "Intermediate "}
+                Badge Verification
+              </Text>
+            </div>
           </Container>
-          <Container className="d-flex flex-column justify-content-center align-items-start flex-row px-4">
+          <Container
+            style={{ flex: 1 }}
+            className="d-inline-flex flex-column justify-content-center align-items-start flex-row px-4 pb-5"
+          >
             <div
               className="d-flex flex-row align-items-center justify-content-between p-3"
               style={{
@@ -155,8 +454,14 @@ const Checkout = ({ setNavbarTransparent }) => {
               }}
             >
               <div
-                style={{ cursor: "pointer" }}
-                onClick={() => setStep(1)}
+                style={{
+                  cursor: completedSteps.includes(1) ? "default" : "pointer",
+                }}
+                onClick={() => {
+                  if (!completedSteps.includes(1)) {
+                    setStep(1);
+                  }
+                }}
                 className="d-flex flex-row align-items-center px-3"
               >
                 <div
@@ -204,8 +509,14 @@ const Checkout = ({ setNavbarTransparent }) => {
                 }}
               />
               <div
-                style={{ cursor: "pointer" }}
-                onClick={() => setStep(2)}
+                style={{
+                  cursor: completedSteps.includes(2) ? "default" : "pointer",
+                }}
+                onClick={() => {
+                  if (!completedSteps.includes(2)) {
+                    setStep(2);
+                  }
+                }}
                 className="d-flex flex-row align-items-center px-3"
               >
                 <div
@@ -253,8 +564,14 @@ const Checkout = ({ setNavbarTransparent }) => {
                 }}
               />
               <div
-                style={{ cursor: "pointer" }}
-                onClick={() => setStep(3)}
+                style={{
+                  cursor: completedSteps.includes(3) ? "default" : "pointer",
+                }}
+                onClick={() => {
+                  if (!completedSteps.includes(3)) {
+                    setStep(3);
+                  }
+                }}
                 className="d-flex flex-row align-items-center px-3"
               >
                 <div
@@ -294,9 +611,37 @@ const Checkout = ({ setNavbarTransparent }) => {
                 )}
               </div>
             </div>
-            <StepOne />
-            <StepTwo />
-            <StepThree />
+            <div
+              className="d-flex align-items-center my-4"
+              style={{
+                backgroundColor: theme.colors.primary["50"] + "70",
+                borderRadius: 8,
+                flex: 1,
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {step === 1 ? (
+                <StepOne />
+              ) : step === 2 ? (
+                <StepTwo />
+              ) : (
+                <StepThree />
+              )}
+            </div>
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{ width: "100%" }}
+            >
+              <a
+                style={{ color: theme.colors.primary["700"] }}
+                href="mailto:development@wadzoo.com?subject=Badge Verification Help"
+              >
+                <Text color="primary.700">Need some assistance?</Text>
+              </a>
+            </div>
           </Container>
         </div>
       </PresenceTransition>
@@ -313,17 +658,84 @@ const Checkout = ({ setNavbarTransparent }) => {
   }
 };
 
-const PlaidLink = ({ linkToken }) => {
-  const { open, ready } = usePlaidLink({
+const PlaidLink = ({
+  linkToken,
+  setAccounts,
+  setLoadingAccounts,
+  setHideLink,
+}) => {
+  const getAccessToken = async (publicToken) => {
+    const response = await fetch(
+      "https://us-central1-wadzurealty.cloudfunctions.net/getAccessToken",
+      {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          publicToken,
+        }),
+      }
+    );
+    const data = await response.json();
+    return data;
+  };
+  const { open, ready, error } = usePlaidLink({
     token: linkToken,
-    onSuccess: (public_token, metadata) => {
-      console.log("PT", public_token);
-      console.log(metadata);
+    onSuccess: async (public_token, metadata) => {
+      setLoadingAccounts(true);
+      const accessTokenData = await getAccessToken(public_token);
+      console.log("ACCESS TOKEN DATA", accessTokenData);
+      const response = await fetch(
+        "https://us-central1-wadzurealty.cloudfunctions.net/getAccounts",
+        {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({
+            accessToken: accessTokenData.access_token,
+          }),
+        }
+      );
+      let data = await response.json();
+      setAccounts(data.accounts);
+      setLoadingAccounts(false);
+    },
+    onExit: (error, metadata) => {
+      console.log("error", error, metadata);
+      setHideLink(true);
     },
   });
   return (
-    <Button onPress={() => open()} isDisabled={!ready}>
-      <Text button>Connect a bank account</Text>
+    <Button
+      rounded="3xl"
+      px={5}
+      onPress={() => {
+        console.log(ready);
+        open();
+      }}
+      isDisabled={!ready}
+      flexDirection="row"
+      display="flex"
+    >
+      {ready ? (
+        <div
+          style={{ fontFamily: "Avenir-Heavy" }}
+          className="d-flex flex-row justify-content-center align-items-center"
+        >
+          Verify with
+          <div className="ms-2" style={{ width: 75 }}>
+            <img
+              src={PlaidLogo}
+              style={{
+                width: "100%",
+                height: undefined,
+                aspectRatio: "2.625",
+                resizeMode: "contain",
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        <Spinner color="white" />
+      )}
     </Button>
   );
 };
