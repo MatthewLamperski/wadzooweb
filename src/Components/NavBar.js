@@ -1,25 +1,25 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Nav, Navbar, Container, Image, Offcanvas } from "react-bootstrap";
+import React, { useContext, useState } from "react";
+import { Container, Image, Nav, Navbar, Offcanvas } from "react-bootstrap";
 import { FiMenu } from "react-icons/fi";
-import { Button, Divider, Pressable, Text, useTheme } from "native-base";
+import { Pressable, Text, useTheme } from "native-base";
 import LogoLongWhite from "../Assets/LogoLongWhite.png";
 import LogoLongBlack from "../Assets/LogoLongBlack.png";
 import { signMeOut } from "../FirebaseInterface";
 import {
-  FaChevronDown,
   FaChevronRight,
   FaEnvelope,
   FaSignOutAlt,
   FaTachometerAlt,
-  FaUser,
   FaVial,
 } from "react-icons/fa";
-import { BiTestTube } from "react-icons/bi";
 import { AppContext } from "../AppContext";
+import { useNavigate } from "react-router-dom";
+
 const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
   const { FIRUser, user } = useContext(AppContext);
   const [show, setShow] = useState(false);
   const theme = useTheme();
+  const navigate = useNavigate();
   return (
     <Navbar
       fixed="top"
@@ -36,7 +36,13 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
       }}
     >
       <Container fluid>
-        <Navbar.Brand style={{ padding: 5 }} href="/">
+        <Navbar.Brand
+          style={{ padding: 5 }}
+          onClick={() => {
+            setShow(false);
+            navigate("/");
+          }}
+        >
           <Image src={LogoLongWhite} height="35" />{" "}
         </Navbar.Brand>
 
@@ -55,12 +61,24 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
         >
           <Offcanvas.Header closeButton>
             <Offcanvas.Title>
-              <Image src={LogoLongBlack} height="40" />
+              <Image
+                onClick={() => {
+                  setShow(false);
+                  navigate("/");
+                }}
+                src={LogoLongBlack}
+                height="40"
+              />
             </Offcanvas.Title>
           </Offcanvas.Header>
           <Offcanvas.Body>
             <Nav>
-              <Nav.Link href="/beta">
+              <Nav.Link
+                onClick={() => {
+                  setShow(false);
+                  navigate("/beta");
+                }}
+              >
                 <div
                   className="p-3"
                   style={{
@@ -90,7 +108,12 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
                   />
                 </div>
               </Nav.Link>
-              <Nav.Link href="/contact">
+              <Nav.Link
+                onClick={() => {
+                  setShow(false);
+                  navigate("/contact");
+                }}
+              >
                 <div
                   className="p-3"
                   style={{
@@ -130,7 +153,12 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
                   </Text>
                 </div>
                 <Nav>
-                  <Nav.Link href="/portal">
+                  <Nav.Link
+                    onClick={() => {
+                      setShow(false);
+                      navigate("/portal");
+                    }}
+                  >
                     <div
                       className="p-3"
                       style={{

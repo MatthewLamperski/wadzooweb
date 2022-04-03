@@ -13,9 +13,16 @@ import LoadingScreen from "../Views/LoadingScreen";
 import PortalAuth from "./PortalAuth";
 import { deviceType } from "./LandingPage";
 import "./Checkout.css";
-import { FaCertificate, FaCheck, FaFile } from "react-icons/all";
+import {
+  FaCertificate,
+  FaCheck,
+  FaEllipsisH,
+  FaFile,
+  FaTimes,
+} from "react-icons/all";
 import { usePlaidLink } from "react-plaid-link";
 import PlaidLogo from "../Assets/svgs/PlaidLogo.svg";
+import { createStripePaymentSession } from "../FirebaseInterface";
 
 const headers = {
   "Content-Type": "application/json",
@@ -32,14 +39,15 @@ const Checkout = ({ setNavbarTransparent }) => {
   }, []);
 
   const { service } = useParams();
-  const { user, setError } = useContext(AppContext);
+  const { user, setError, setUser } = useContext(AppContext);
   const theme = useTheme();
   const [step, setStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState([]);
+  const [completedSteps, setCompletedSteps] = useState([1, 2]);
   const [linkToken, setLinkToken] = useState(null);
   const [accounts, setAccounts] = useState();
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [hideLink, setHideLink] = useState(false);
+  const [request, setRequest] = useState();
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -183,9 +191,19 @@ const Checkout = ({ setNavbarTransparent }) => {
                   <Button
                     px={5}
                     rounded="3xl"
-                    onPress={() =>
-                      completedSteps.includes(2) ? setStep(3) : setStep(2)
-                    }
+                    onPress={() => {
+                      setRequest((prevState) => ({
+                        ...prevState,
+                        combinedBalances: formatter.format(
+                          Number(
+                            accounts
+                              .map((account) => account.balances.current)
+                              .reduce((partialSum, num) => partialSum + num, 0)
+                          )
+                        ),
+                      }));
+                      completedSteps.includes(2) ? setStep(3) : setStep(2);
+                    }}
                   >
                     Next Step
                   </Button>
@@ -298,9 +316,13 @@ const Checkout = ({ setNavbarTransparent }) => {
             <div className="d-flex">
               <Button
                 size="sm"
-                px={4}
+                px={5}
                 rounded="3xl"
                 onPress={() => {
+                  setRequest((prevState) => ({
+                    ...prevState,
+                    deals: selectedFiles ? "files" : "requestCall",
+                  }));
                   setCompletedSteps((prevState) => [...prevState, 2]);
                   setStep(3);
                 }}
@@ -371,9 +393,14 @@ const Checkout = ({ setNavbarTransparent }) => {
               <Text fontWeight={300} fontSize={16} color="secondary.800">
                 Or, you can request a call from our verification team.
               </Text>
+              <Text fontSize={14} color="muted.400">
+                Our team will reach out via email to schedule a call to verify
+                the number of deals you have completed.
+              </Text>
               <Button
+                my={3}
                 rounded="3xl"
-                px={4}
+                px={5}
                 size="sm"
                 onPress={() => {
                   setRequestSent(true);
@@ -389,262 +416,365 @@ const Checkout = ({ setNavbarTransparent }) => {
   };
 
   const StepThree = () => {
+    const [loading, setLoading] = useState(false);
     return (
-      <div className="d-flex flex-column flex-grow-1 justify-content-start align-items-start p-4">
-        <Text pb={3} fontWeight={300} fontSize={24} color="secondary.800">
+      <div
+        style={{ width: "100%" }}
+        className="d-flex flex-column flex-grow-1 justify-content-center align-items-start p-4"
+      >
+        <Text pb={3} fontWeight={300} fontSize={22} color="secondary.800">
           Finally, we'll submit all this info.
         </Text>
-        <Text fontSize={18} color="muted.400">
-          Sumbit your information for verification.
-        </Text>
+        <div className="d-flex flex-column justify-content-center align-items-start p-2">
+          <div className="d-flex flex-row justify-content-center align-items-start p-2">
+            <div
+              className="circle"
+              style={{
+                backgroundColor: completedSteps.includes(1)
+                  ? theme.colors.primary["400"]
+                  : "whitesmoke",
+              }}
+            >
+              {completedSteps.includes(1) ? (
+                <FaCheck color="white" />
+              ) : (
+                <FaTimes color={theme.colors.error["500"]} />
+              )}
+            </div>
+            <div className="d-flex flex-column justify-content-center align-items-start">
+              <Text px={3} fontSize={18} fontWeight={300} color="primary.700">
+                Funding
+              </Text>
+              <Text px={3} fontSize={14} color="muted.400">
+                {!completedSteps.includes(1)
+                  ? "You must submit your funding verification before you can go further."
+                  : "Everything looks good!"}
+              </Text>
+            </div>
+          </div>
+          <div className="d-flex flex-row justify-content-center align-items-start p-2">
+            <div
+              className="circle"
+              style={{
+                backgroundColor: completedSteps.includes(2)
+                  ? theme.colors.primary["400"]
+                  : "whitesmoke",
+              }}
+            >
+              {completedSteps.includes(2) ? (
+                <FaCheck color="white" />
+              ) : (
+                <FaTimes color={theme.colors.error["500"]} />
+              )}
+            </div>
+            <div className="d-flex flex-column justify-content-center align-items-start">
+              <Text px={3} fontSize={18} fontWeight={300} color="primary.700">
+                Deals
+              </Text>
+              <Text px={3} fontSize={14} color="muted.400">
+                {!completedSteps.includes(2)
+                  ? "You must submit proof of deals (or request a call) before you can continue."
+                  : "Everything looks good!"}
+              </Text>
+            </div>
+          </div>
+          <div className="d-flex flex-row justify-content-center align-items-start p-2">
+            <div
+              className="circle"
+              style={{
+                backgroundColor: theme.colors.muted["100"],
+              }}
+            >
+              <FaEllipsisH color={theme.colors.primary["400"]} />
+            </div>
+            <div className="d-flex flex-column justify-content-center align-items-start">
+              <Text px={3} fontSize={18} fontWeight={300} color="primary.700">
+                Submit
+              </Text>
+              <Text px={3} fontSize={14} color="muted.400">
+                The final step is to checkout to submit your verification
+                request!
+              </Text>
+            </div>
+          </div>
+        </div>
+        <Button
+          isDisabled={
+            !completedSteps.includes(1) || !completedSteps.includes(2)
+          }
+          px={5}
+          rounded="3xl"
+          onPress={() => {
+            setLoading(true);
+            createStripePaymentSession(user.uid, service)
+              .then((url) => {
+                window.location = url;
+              })
+              .catch((err) => {
+                console.log(err);
+                setError({
+                  title: "Something went wrong...",
+                  message: "Here is the error: " + err,
+                });
+              });
+          }}
+        >
+          {loading ? <Spinner button /> : "Checkout"}
+        </Button>
       </div>
     );
   };
 
   if (user) {
     return (
-      <PresenceTransition
-        visible
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 500 } }}
-      >
-        <div
-          style={{
-            minHeight: "100vh",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            flexDirection: "column",
-            paddingTop: navbarHeight,
-          }}
+      <>
+        <PresenceTransition
+          visible
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: 500 } }}
+          exit={{ opacity: 0, transition: { duration: 500 } }}
         >
-          <Container
-            className="py-4"
+          <div
             style={{
-              justifyContent: "start",
-              alignItems: "start",
+              minHeight: "100vh",
               display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
               flexDirection: "column",
+              paddingTop: navbarHeight,
             }}
           >
-            <div className="d-flex flex-row align-items-center">
-              <FaCertificate color={theme.colors.secondary["800"]} size={20} />
-              <Text
-                px={2}
-                py={0}
-                fontSize={18}
-                fontWeight={300}
-                color="secondary.800"
-              >
-                {service === "verifyAdvanced" ? "Advanced " : "Intermediate "}
-                Badge Verification
-              </Text>
-            </div>
-          </Container>
-          <Container
-            style={{ flex: 1 }}
-            className="d-inline-flex flex-column justify-content-center align-items-start flex-row px-4 pb-5"
-          >
-            <div
-              className="d-flex flex-row align-items-center justify-content-between p-3"
+            <Container
+              className="py-4"
               style={{
-                width: "100%",
-                borderRadius: 8,
-                backgroundColor: theme.colors.primary["50"] + "70",
-              }}
-            >
-              <div
-                style={{
-                  cursor: completedSteps.includes(1) ? "default" : "pointer",
-                }}
-                onClick={() => {
-                  if (!completedSteps.includes(1)) {
-                    setStep(1);
-                  }
-                }}
-                className="d-flex flex-row align-items-center px-3"
-              >
-                <div
-                  className="p-2 circle"
-                  style={{
-                    backgroundColor:
-                      completedSteps.includes(1) || step === 1
-                        ? theme.colors.primary["400"]
-                        : "white",
-                    transition: "all .4s ease",
-                    WebkitTransition: "all .4s ease",
-                    MozTransition: "all .4s ease",
-                  }}
-                >
-                  <span
-                    style={{
-                      color:
-                        completedSteps.includes(1) || step === 1
-                          ? "white"
-                          : theme.colors.primary["400"],
-                      transition: "all .4s ease",
-                      WebkitTransition: "all .4s ease",
-                      MozTransition: "all .4s ease",
-                    }}
-                  >
-                    {completedSteps.includes(1) ? (
-                      <FaCheck color="white" />
-                    ) : (
-                      "1"
-                    )}
-                  </span>
-                </div>
-                {!hideOnMobile() && (
-                  <Text pl={2} color="primary.700">
-                    Funding
-                  </Text>
-                )}
-              </div>
-              <div
-                className="flex-grow-1"
-                style={{
-                  backgroundColor: theme.colors.primary["400"],
-                  borderRadius: 3,
-                  height: 2,
-                }}
-              />
-              <div
-                style={{
-                  cursor: completedSteps.includes(2) ? "default" : "pointer",
-                }}
-                onClick={() => {
-                  if (!completedSteps.includes(2)) {
-                    setStep(2);
-                  }
-                }}
-                className="d-flex flex-row align-items-center px-3"
-              >
-                <div
-                  className="p-2 circle"
-                  style={{
-                    backgroundColor:
-                      completedSteps.includes(2) || step === 2
-                        ? theme.colors.primary["400"]
-                        : "white",
-                    transition: "all .4s ease",
-                    WebkitTransition: "all .4s ease",
-                    MozTransition: "all .4s ease",
-                  }}
-                >
-                  <span
-                    style={{
-                      color:
-                        completedSteps.includes(2) || step === 2
-                          ? "white"
-                          : theme.colors.primary["400"],
-                      transition: "all .4s ease",
-                      WebkitTransition: "all .4s ease",
-                      MozTransition: "all .4s ease",
-                    }}
-                  >
-                    {completedSteps.includes(2) ? (
-                      <FaCheck color="white" />
-                    ) : (
-                      "2"
-                    )}
-                  </span>
-                </div>
-                {!hideOnMobile() && (
-                  <Text pl={2} color="primary.700">
-                    Deals
-                  </Text>
-                )}
-              </div>
-              <div
-                className="flex-grow-1"
-                style={{
-                  backgroundColor: theme.colors.primary["400"],
-                  borderRadius: 3,
-                  height: 2,
-                }}
-              />
-              <div
-                style={{
-                  cursor: completedSteps.includes(3) ? "default" : "pointer",
-                }}
-                onClick={() => {
-                  if (!completedSteps.includes(3)) {
-                    setStep(3);
-                  }
-                }}
-                className="d-flex flex-row align-items-center px-3"
-              >
-                <div
-                  className="p-2 circle"
-                  style={{
-                    backgroundColor:
-                      completedSteps.includes(3) || step === 3
-                        ? theme.colors.primary["400"]
-                        : "white",
-                    transition: "all .4s ease",
-                    WebkitTransition: "all .4s ease",
-                    MozTransition: "all .4s ease",
-                  }}
-                >
-                  <span
-                    style={{
-                      color:
-                        completedSteps.includes(3) || step === 3
-                          ? "white"
-                          : theme.colors.primary["400"],
-                      transition: "all .4s ease",
-                      WebkitTransition: "all .4s ease",
-                      MozTransition: "all .4s ease",
-                    }}
-                  >
-                    {completedSteps.includes(3) ? (
-                      <FaCheck color="white" />
-                    ) : (
-                      "3"
-                    )}
-                  </span>
-                </div>
-                {!hideOnMobile() && (
-                  <Text pl={2} color="primary.700">
-                    Submit
-                  </Text>
-                )}
-              </div>
-            </div>
-            <div
-              className="d-flex align-items-center my-4"
-              style={{
-                backgroundColor: theme.colors.primary["50"] + "70",
-                borderRadius: 8,
-                flex: 1,
-                height: "100%",
-                width: "100%",
+                justifyContent: "start",
+                alignItems: "start",
                 display: "flex",
                 flexDirection: "column",
               }}
             >
-              {step === 1 ? (
-                <StepOne />
-              ) : step === 2 ? (
-                <StepTwo />
-              ) : (
-                <StepThree />
-              )}
-            </div>
-            <div
-              className="d-flex justify-content-center align-items-center"
-              style={{ width: "100%" }}
+              <div className="d-flex flex-row align-items-center">
+                <FaCertificate
+                  color={theme.colors.secondary["800"]}
+                  size={20}
+                />
+                <Text
+                  px={2}
+                  py={0}
+                  fontSize={18}
+                  fontWeight={300}
+                  color="secondary.800"
+                >
+                  {service === "verifyAdvanced" ? "Advanced " : "Intermediate "}
+                  Badge Verification
+                </Text>
+              </div>
+            </Container>
+            <Container
+              style={{ flex: 1 }}
+              className="d-inline-flex flex-column justify-content-center align-items-start flex-row px-4 pb-5"
             >
-              <a
-                style={{ color: theme.colors.primary["700"] }}
-                href="mailto:development@wadzoo.com?subject=Badge Verification Help"
+              <div
+                className="d-flex flex-row align-items-center justify-content-between p-3"
+                style={{
+                  width: "100%",
+                  borderRadius: 8,
+                  backgroundColor: theme.colors.primary["50"] + "70",
+                }}
               >
-                <Text color="primary.700">Need some assistance?</Text>
-              </a>
-            </div>
-          </Container>
-        </div>
-      </PresenceTransition>
+                <div
+                  style={{
+                    cursor: completedSteps.includes(1) ? "default" : "pointer",
+                  }}
+                  onClick={() => {
+                    if (!completedSteps.includes(1)) {
+                      setStep(1);
+                    }
+                  }}
+                  className="d-flex flex-row align-items-center px-3"
+                >
+                  <div
+                    className="p-2 circle"
+                    style={{
+                      backgroundColor:
+                        completedSteps.includes(1) || step === 1
+                          ? theme.colors.primary["400"]
+                          : "white",
+                      transition: "all .4s ease",
+                      WebkitTransition: "all .4s ease",
+                      MozTransition: "all .4s ease",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color:
+                          completedSteps.includes(1) || step === 1
+                            ? "white"
+                            : theme.colors.primary["400"],
+                        transition: "all .4s ease",
+                        WebkitTransition: "all .4s ease",
+                        MozTransition: "all .4s ease",
+                      }}
+                    >
+                      {completedSteps.includes(1) ? (
+                        <FaCheck color="white" />
+                      ) : (
+                        "1"
+                      )}
+                    </span>
+                  </div>
+                  {!hideOnMobile() && (
+                    <Text pl={2} color="primary.700">
+                      Funding
+                    </Text>
+                  )}
+                </div>
+                <div
+                  className="flex-grow-1"
+                  style={{
+                    backgroundColor: theme.colors.primary["400"],
+                    borderRadius: 3,
+                    height: 2,
+                  }}
+                />
+                <div
+                  style={{
+                    cursor: completedSteps.includes(2) ? "default" : "pointer",
+                  }}
+                  onClick={() => {
+                    if (!completedSteps.includes(2)) {
+                      setStep(2);
+                    }
+                  }}
+                  className="d-flex flex-row align-items-center px-3"
+                >
+                  <div
+                    className="p-2 circle"
+                    style={{
+                      backgroundColor:
+                        completedSteps.includes(2) || step === 2
+                          ? theme.colors.primary["400"]
+                          : "white",
+                      transition: "all .4s ease",
+                      WebkitTransition: "all .4s ease",
+                      MozTransition: "all .4s ease",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color:
+                          completedSteps.includes(2) || step === 2
+                            ? "white"
+                            : theme.colors.primary["400"],
+                        transition: "all .4s ease",
+                        WebkitTransition: "all .4s ease",
+                        MozTransition: "all .4s ease",
+                      }}
+                    >
+                      {completedSteps.includes(2) ? (
+                        <FaCheck color="white" />
+                      ) : (
+                        "2"
+                      )}
+                    </span>
+                  </div>
+                  {!hideOnMobile() && (
+                    <Text pl={2} color="primary.700">
+                      Deals
+                    </Text>
+                  )}
+                </div>
+                <div
+                  className="flex-grow-1"
+                  style={{
+                    backgroundColor: theme.colors.primary["400"],
+                    borderRadius: 3,
+                    height: 2,
+                  }}
+                />
+                <div
+                  style={{
+                    cursor: completedSteps.includes(3) ? "default" : "pointer",
+                  }}
+                  onClick={() => {
+                    if (!completedSteps.includes(3)) {
+                      setStep(3);
+                    }
+                  }}
+                  className="d-flex flex-row align-items-center px-3"
+                >
+                  <div
+                    className="p-2 circle"
+                    style={{
+                      backgroundColor:
+                        completedSteps.includes(3) || step === 3
+                          ? theme.colors.primary["400"]
+                          : "white",
+                      transition: "all .4s ease",
+                      WebkitTransition: "all .4s ease",
+                      MozTransition: "all .4s ease",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color:
+                          completedSteps.includes(3) || step === 3
+                            ? "white"
+                            : theme.colors.primary["400"],
+                        transition: "all .4s ease",
+                        WebkitTransition: "all .4s ease",
+                        MozTransition: "all .4s ease",
+                      }}
+                    >
+                      {completedSteps.includes(3) ? (
+                        <FaCheck color="white" />
+                      ) : (
+                        "3"
+                      )}
+                    </span>
+                  </div>
+                  {!hideOnMobile() && (
+                    <Text pl={2} color="primary.700">
+                      Submit
+                    </Text>
+                  )}
+                </div>
+              </div>
+              <div
+                className="d-flex align-items-center my-4"
+                style={{
+                  backgroundColor: theme.colors.primary["50"] + "70",
+                  borderRadius: 8,
+                  flex: 1,
+                  height: "100%",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {step === 1 ? (
+                  <StepOne />
+                ) : step === 2 ? (
+                  <StepTwo />
+                ) : (
+                  <StepThree />
+                )}
+              </div>
+              <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ width: "100%" }}
+              >
+                <a
+                  style={{ color: theme.colors.primary["700"] }}
+                  href="mailto:development@wadzoo.com?subject=Badge Verification Help"
+                >
+                  <Text color="primary.700">Need some assistance?</Text>
+                </a>
+              </div>
+            </Container>
+          </div>
+        </PresenceTransition>
+      </>
     );
   } else if (user === null) {
     return (

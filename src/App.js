@@ -1,7 +1,7 @@
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
 import { NativeBaseProvider, Text } from "native-base";
-import { Routes, Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import LandingPage from "./Routes/LandingPage";
 import BugReport from "./Routes/BugReport";
 import VerifyBadge from "./Routes/VerifyBadge";
@@ -29,6 +29,7 @@ import CreateListing from "./Views/DataEntryDashboard/CreateListing";
 import ManageListings from "./Views/DataEntryDashboard/ManageListings";
 import ListingView from "./Views/ListingView";
 import Checkout from "./Routes/Checkout";
+import BadgeStatus from "./Views/BadgeStatus";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -171,6 +172,12 @@ function App() {
             <Route
               path="/checkout/:service"
               element={<Checkout setNavbarTransparent={setNavbarTransparent} />}
+            />
+            <Route
+              path="/badgestatus"
+              element={
+                <BadgeStatus setNavbarTransparent={setNavbarTransparent} />
+              }
             />
           </Routes>
           <Footer />

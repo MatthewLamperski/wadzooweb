@@ -1,11 +1,12 @@
 import React from "react";
 import { Col, Container, Image, Row } from "react-bootstrap";
 import LogoLongWhite from "../Assets/LogoLongWhite.png";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTheme, VStack } from "native-base";
 
 const Footer = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   return (
     <div
       style={{ backgroundColor: theme.colors.secondary["900"], padding: 50 }}
@@ -24,8 +25,9 @@ const Footer = () => {
                   color: theme.colors.muted["400"],
                   textDecoration: "none",
                   fontFamily: "Avenir-Heavy",
+                  cursor: "pointer",
                 }}
-                href="/contact"
+                onClick={() => navigate("/contact")}
               >
                 Contact Us
               </a>
@@ -34,8 +36,9 @@ const Footer = () => {
                   color: theme.colors.muted["400"],
                   textDecoration: "none",
                   fontFamily: "Avenir-Heavy",
+                  cursor: "pointer",
                 }}
-                href="/beta"
+                onClick={() => navigate("/beta")}
               >
                 Beta Test
               </a>

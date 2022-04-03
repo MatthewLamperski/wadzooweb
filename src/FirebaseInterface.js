@@ -1,31 +1,32 @@
 import {
+  createUserWithEmailAndPassword,
   getAuth,
+  getRedirectResult,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
-  getRedirectResult,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signOut,
-  GoogleAuthProvider,
 } from "firebase/auth";
 
-import { getStorage, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {
+  addDoc,
+  arrayUnion,
+  collection,
   doc,
   getDoc,
   getDocs,
-  collection,
-  setDoc,
-  query,
-  where,
-  addDoc,
-  updateDoc,
-  arrayUnion,
-  orderBy,
   limit,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
   startAfter,
+  updateDoc,
+  where,
 } from "firebase/firestore";
-import { db, secondaryApp } from "./App";
+import {db, secondaryApp} from "./App";
 import emailjs from "@emailjs/browser";
 
 // Auth Functions
@@ -226,6 +227,43 @@ export const getListing = (docID) => {
         } else {
           reject(".exists() false");
         }
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const createStripePaymentSession = (uid, service) => {
+  return new Promise((resolve, reject) => {
+    getDoc(doc(db, `/products/${service}`))
+      .then((docSnapshot) => {
+        if (!docSnapshot.exists()) {
+          reject("Product not found");
+        }
+        console.log(docSnapshot.data());
+        const { price } = docSnapshot.data();
+        const checkoutInfo = {
+          mode: "payment",
+          price,
+          success_url: window.location.origin + "/badgeStatus",
+          cancel_url: window.location.origin + `/checkout/${service}`,
+        };
+        addDoc(
+          collection(db, `/customers/${uid}/checkout_sessions`),
+          checkoutInfo
+        )
+          .then((session_doc) => {
+            console.log(session_doc.path);
+            onSnapshot(doc(db, session_doc.path), (snapshot) => {
+              const { error, url } = snapshot.data();
+              if (error) {
+                reject(error);
+              }
+              if (url) {
+                resolve(url);
+              }
+            });
+          })
+          .catch((err) => reject(err));
       })
       .catch((err) => reject(err));
   });

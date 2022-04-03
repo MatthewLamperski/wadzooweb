@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
-import { Avatar, Box, Button, Skeleton, Text, useTheme } from "native-base";
-import { FaArrowRight, FaCertificate, FaCheck } from "react-icons/all";
+import { Avatar, Button, Skeleton, Text, useTheme } from "native-base";
+import { FaCertificate, FaCheck } from "react-icons/all";
 import BeginnerAvi from "../Assets/beginner.jpg";
 import InterAvi from "../Assets/intermediate.jpg";
 import AdvancedAvi from "../Assets/advanced.jpg";
 import "./VerifyBadge.css";
+import { useNavigate } from "react-router-dom";
 
 const VerifyBadge = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
+  const navigate = useNavigate();
   useEffect(() => {
     setNavbarTransparent(false);
     setnavbarHeight(
@@ -195,7 +197,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
         >
           <Col style={styles.badgeContainer} xs={12} sm={8} md={4} lg={3}>
             <a
-              href="/beta"
+              onClick={() => navigate("/beta")}
               className="animate-shadow-card"
               style={styles.cardContainer}
             >
@@ -246,7 +248,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
                   </Text>
                 </div>
                 <Button
-                  href="/download"
+                  onPress={() => navigate("/beta")}
                   mt={7}
                   mx="auto"
                   borderRadius={50}
@@ -261,7 +263,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
           </Col>
           <Col style={styles.badgeContainer} xs={12} sm={8} md={4} lg={3}>
             <a
-              href="/checkout/verifyIntermediate"
+              onClick={() => navigate("/checkout/verifyIntermediate")}
               className="animate-shadow-card"
               style={styles.cardContainer}
             >
@@ -300,7 +302,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
                     className="mx-3"
                     color={theme.colors.primary["500"]}
                   />
-                  <Text color="muted.500">Done 10 - 15 deals</Text>
+                  <Text color="muted.500">Done 10 - 49 deals</Text>
                 </div>
                 <div className="d-flex flex-row align-items-center">
                   <FaCheck
@@ -314,7 +316,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
                   mx="auto"
                   borderRadius={50}
                   w="75%"
-                  href="/checkout/verifyIntermediate"
+                  onPress={() => navigate("/checkout/verifyIntermediate")}
                 >
                   <Text fontWeight={300} my={0} button>
                     Get verified
@@ -325,7 +327,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
           </Col>
           <Col style={styles.badgeContainer} xs={12} sm={8} md={4} lg={3}>
             <a
-              href="/checkout/verifyAdvanced"
+              onClick={() => navigate("/checkout/verifyAdvanced")}
               className="animate-shadow-card"
               style={styles.cardContainer}
             >
@@ -380,7 +382,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
                   mx="auto"
                   borderRadius={50}
                   w="75%"
-                  href="/checkout/verifyAdvanced"
+                  onPress={() => navigate("/checkout/verifyAdvanced")}
                 >
                   <Text fontWeight={300} my={0} button>
                     Get verified

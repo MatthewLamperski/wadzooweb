@@ -3,18 +3,19 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { ParallaxBanner } from "react-scroll-parallax";
 import "./LandingPage.css";
 import {
-  PresenceTransition,
   Button,
-  useTheme,
-  Text,
   HStack,
+  PresenceTransition,
+  Text,
+  useTheme,
 } from "native-base";
-import { Container, Image, Row, Col } from "react-bootstrap";
+import { Col, Container, Image, Row } from "react-bootstrap";
 import HousesVideo from "../Assets/houses.mp4";
 import HousesCover from "../Assets/HousesCover.png";
 import Investors from "../Assets/Investors.png";
 import Map from "../Assets/Map.png";
 import VideoCover from "react-video-cover";
+import { useNavigate } from "react-router-dom";
 
 export const deviceType = () => {
   let userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -38,6 +39,7 @@ export const deviceType = () => {
 
 const LandingPage = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
+  const navigate = useNavigate();
   const theme = useTheme();
   const bodyRef = useRef(null);
   const scrollToBody = () =>
@@ -266,7 +268,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                     backgroundColor: theme.colors.primary["500"],
                     fontFamily: "Avenir-Heavy",
                   }}
-                  href="/beta"
+                  onPress={() => navigate("/beta")}
                 >
                   <HStack alignItems="center" space={2}>
                     <Text fontWeight={300} button>
