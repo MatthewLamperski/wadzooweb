@@ -1,21 +1,32 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
-import { PresenceTransition, Pressable, Spinner, Text } from "native-base";
-import { Container, Image } from "react-bootstrap";
+import {
+  Button,
+  PresenceTransition,
+  Pressable,
+  Spinner,
+  Text,
+  useTheme,
+} from "native-base";
+import { Container } from "react-bootstrap";
 import AccessDenied from "./AccessDenied";
 import LoadingScreen from "./LoadingScreen";
 import { getListing } from "../FirebaseInterface";
+import { Slide } from "react-slideshow-image";
+import "react-slideshow-image/dist/styles.css";
+import "./ListingView.css";
+import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from "react-icons/all";
 
 const ListingView = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
   useEffect(() => {
-    console.log("REACHED");
     setNavbarTransparent(false);
     setnavbarHeight(
       document.getElementsByClassName("navbar").item(0).clientHeight
     );
   }, []);
+  const navigate = useNavigate();
   const [listing, setListing] = useState();
   useEffect(() => {
     getListing(docID)
@@ -26,9 +37,19 @@ const ListingView = ({ setNavbarTransparent }) => {
           message: "Try again, contact Matthew if issue persists.",
         })
       );
-  });
+  }, []);
+  const properties = {
+    duration: 5000,
+    transitionDuration: 500,
+    arrows: true,
+    infinite: true,
+    easing: "ease",
+  };
   const { docID } = useParams();
   const { user, setError } = useContext(AppContext);
+  const sliderRef = useRef(null);
+  const theme = useTheme();
+  const [editing, setEditing] = useState();
   if (user && user.role) {
     if (user.role === "dataEntry" || user.role === "admin") {
       return (
@@ -50,36 +71,78 @@ const ListingView = ({ setNavbarTransparent }) => {
               style={{
                 boxShadow:
                   "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
-                overflow: "scroll",
                 flexDirection: "column",
                 backgroundColor: "white",
                 borderRadius: 8,
+                position: "relative",
               }}
             >
               <div>
                 {listing ? (
                   <div className="d-flex flex-column justify-content-center">
+                    {listing.images && listing.images.length > 0 && (
+                      <div className="d-flex flex-row justify-content-between align-items-center p-2">
+                        <Pressable
+                          p={3}
+                          onPress={() => sliderRef.current.goBack()}
+                        >
+                          <FaArrowAltCircleLeft size={35} />
+                        </Pressable>
+                        <div
+                          style={{
+                            padding: 20,
+                            position: "relative",
+                          }}
+                          className="slide-container"
+                        >
+                          <Slide
+                            {...properties}
+                            ref={sliderRef}
+                            arrows={false}
+                            transitionDuration={500}
+                          >
+                            {listing.images.map((url, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  width: "auto",
+                                  height: 300,
+                                  aspectRatio: 1,
+                                  display: "flex",
+                                }}
+                              >
+                                <img
+                                  key={url}
+                                  className="my-auto mx-auto"
+                                  style={{
+                                    objectFit: "contain",
+                                    flex: 1,
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: 8,
+                                  }}
+                                  src={url}
+                                  alt="Couldn't Load"
+                                />
+                              </div>
+                            ))}
+                          </Slide>
+                        </div>
+                        <Pressable
+                          p={3}
+                          onPress={() => sliderRef.current.goNext()}
+                        >
+                          <FaArrowAltCircleRight
+                            color={theme.colors.secondary["800"]}
+                            size={35}
+                          />
+                        </Pressable>
+                      </div>
+                    )}
                     <Text color="secondary.800" fontWeight={300} fontSize={24}>
                       {listing.address}, {listing.city} {listing.state}
                     </Text>
-                    <div
-                      style={{ overflow: "scroll" }}
-                      className="d-flex flex-row align-items-center py-3"
-                    >
-                      {listing.images.map((url) => (
-                        <Image
-                          src={url}
-                          key={url}
-                          style={{
-                            maxHeight: 200,
-                            alignSelf: "center",
-                            borderRadius: 4,
-                            marginRight: 8,
-                          }}
-                          alt={url}
-                        />
-                      ))}
-                    </div>
+                    {listing.images && listing.images.length > 0 && <div />}
                     <Text fontSize={20} color="muted.400">
                       ${Number(listing.purchasePrice).toLocaleString()}
                     </Text>
@@ -90,6 +153,26 @@ const ListingView = ({ setNavbarTransparent }) => {
                       {listing.images.length} image
                       {listing.images.length === 1 ? "" : "s"}
                     </Text>
+                    <Text>Seller: {listing.lister}</Text>
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        padding: 10,
+                      }}
+                    >
+                      <Button
+                        variant="subtle"
+                        onPress={() => {
+                          navigate("/createListing", {
+                            state: { listing: listing },
+                          });
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <Spinner />

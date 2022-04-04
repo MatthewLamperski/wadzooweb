@@ -6,3 +6,12 @@
 .animate-shadow:hover {
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09);
 }
+
+.animate-translate {
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(-5px) scale(100%);
+}
+
+.animate-shadow:hover .animate-translate {
+    transform: translateX(0) scale(110%);
+}

@@ -3,7 +3,6 @@ import AccessDenied from "../AccessDenied";
 import LoadingScreen from "../LoadingScreen";
 import { AppContext } from "../../AppContext";
 import {
-  Box,
   Image,
   PresenceTransition,
   Pressable,
@@ -12,11 +11,13 @@ import {
   useTheme,
 } from "native-base";
 import { getProdListings } from "../../FirebaseInterface";
-import { Container, Row } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import "./ManageListings.css";
 import { FaArrowCircleRight } from "react-icons/all";
+import { useNavigate } from "react-router-dom";
 
 const ManageListings = ({ setNavbarTransparent }) => {
+  const navigate = useNavigate();
   const { user, setError } = useContext(AppContext);
   const theme = useTheme();
   const [navbarHeight, setnavbarHeight] = useState();
@@ -90,7 +91,9 @@ const ManageListings = ({ setNavbarTransparent }) => {
               >
                 {listings ? (
                   listings.map((listing) => (
-                    <Pressable href={`/listings/${listing.docID}`}>
+                    <Pressable
+                      onPress={() => navigate(`/listings/${listing.docID}`)}
+                    >
                       {({ isHovered }) => (
                         <div
                           key={listing.docID}
@@ -131,6 +134,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
                             </div>
                           </div>
                           <FaArrowCircleRight
+                            className="animate-translate"
                             size={20}
                             color={theme.colors.secondary["800"]}
                           />

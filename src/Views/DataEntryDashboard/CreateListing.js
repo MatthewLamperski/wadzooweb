@@ -27,14 +27,13 @@ import {
   createUser,
   findUsersByEmail,
   getProfilePicURL,
+  getUserDoc,
 } from "../../FirebaseInterface";
 import {
   FaBath,
   FaBed,
-  FaCheck,
   FaExclamationTriangle,
   FaRulerCombined,
-  FaTimes,
   FaTrashAlt,
 } from "react-icons/all";
 import { toast } from "react-toastify";
@@ -44,6 +43,8 @@ import Geocode from "react-geocode";
 import ngeohash from "ngeohash";
 import AddCompanyLogo from "./AddCompanyLogo";
 import AddPropertyImages from "./AddPropertyImages";
+import { useLocation } from "react-router-dom";
+import ReorderPropertyImages from "./ReorderPropertyImages";
 
 const propertyTypeVals = [
   "Single Family Residential",
@@ -78,6 +79,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
   const { user, setError } = useContext(AppContext);
   const [navbarHeight, setnavbarHeight] = useState();
   const [listerEmail, setListerEmail] = useState();
+  const [loading, setLoading] = useState(false);
   const [listing, setListing] = useState();
   const [emailSearchResults, setEmailSearchResults] = useState();
   const [emailSearchLoading, setEmailSearchLoading] = useState(false);
@@ -85,6 +87,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
   const [formErrors, setFormErrors] = useState({});
   const [showData, setShowData] = useState(false);
   const [listerPPUrl, setListerPPUrl] = useState();
+  const [showReorderModal, setShowReorderModal] = useState(false);
 
   // Create New User State
   const [createUserLoading, setCreateUserLoading] = useState(false);
@@ -127,8 +130,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
     );
   }, []);
   useEffect(() => {
-    if (listing && listing.listerObj && listing.listerObj.uid) {
-      console.log("YEP");
+    if (listing && listing.listerObj && listing.listerObj.uid && !listerPPUrl) {
       getProfilePicURL(listing.listerObj.uid)
         .then((url) => setListerPPUrl(url))
         .catch((err) => {
@@ -139,6 +141,26 @@ const CreateListing = ({ setNavbarTransparent }) => {
       setListerPPUrl(undefined);
     }
   }, [listing]);
+  const { state } = useLocation();
+  useEffect(() => {
+    if (state.listing && listing === undefined) {
+      setLoading(true);
+      getUserDoc(state.listing.lister)
+        .then((listerDoc) => {
+          setListing({
+            ...state.listing,
+            listerObj: { ...listerDoc },
+          });
+          setLoading(false);
+        })
+        .catch((err) =>
+          setError({
+            title: "Something went wrong.",
+            message: "We couldn't find the lister...",
+          })
+        );
+    }
+  }, []);
   const handleCreateListing = () => {
     console.log(uploadImages);
     if (validated()) {
@@ -347,6 +369,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
               display: "flex",
               flexDirection: "column",
               paddingTop: navbarHeight,
+              position: "relative",
             }}
           >
             <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
@@ -409,6 +432,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               borderRadius: 8,
                               borderWidth: 1,
                               borderColor: theme.colors.primary["300"],
+                              flex: 1,
                               boxShadow:
                                 "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
                             }}
@@ -449,17 +473,21 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               <div
                                 className="p-2"
                                 style={{
-                                  flexDirection: "column",
-                                  display: "flex",
+                                  textOverflow: "ellipsis",
+                                  overflow: "hidden",
+                                  whiteSpace: "nowrap",
+                                  fontFamily: "Avenir",
+                                  fontSize: 14,
                                 }}
                               >
                                 <HStack
                                   justifyContent="space-between"
                                   alignItems="center"
+                                  flex={1}
                                 >
                                   <Text>{`${listing.listerObj.firstName} ${listing.listerObj.lastName}`}</Text>
                                 </HStack>
-                                <Text fontWeight={100}>{listing.email}</Text>
+                                {listing.email}
                               </div>
                             </div>
                           </Box>
@@ -1011,6 +1039,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       >
                         Add Property Images
                       </Button>
+                      {((listing && listing.images) || uploadImages) && (
+                        <Button
+                          variant="subtle"
+                          onPress={() => setShowReorderModal(true)}
+                          my={3}
+                        >
+                          Reorder Property Images
+                        </Button>
+                      )}
                       <div className="py-2">
                         <Text
                           fontSize={18}
@@ -1236,7 +1273,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
                     {createLoading ? (
                       <Spinner color="white" />
                     ) : (
-                      <Text button>Create</Text>
+                      <Text button>
+                        {listing && listing.docID !== undefined
+                          ? "Update"
+                          : "Create"}
+                      </Text>
                     )}
                   </Button>
                 </div>
@@ -1831,6 +1872,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               "comments",
                               "firstName",
                               "lastName",
+                              "docID",
                             ],
                             3
                           )
@@ -1840,6 +1882,51 @@ const CreateListing = ({ setNavbarTransparent }) => {
                 </div>
               </div>
             </div>
+            {loading && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: theme.colors.light["50"] + "C0",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{ backgroundColor: "white", borderRadius: 8 }}
+                  className="flex-column d-flex justify-content-center align-items-center p-4"
+                >
+                  <Spinner size="lg" color="primary.500" />
+                  <Text fontWeight={300} pt={4} color="secondary.800">
+                    Loading...
+                  </Text>
+                </div>
+              </div>
+            )}
+            <Modal
+              isOpen={showReorderModal}
+              onClose={() => setShowReorderModal(false)}
+              _backdrop={{ bg: "warmGray.500" }}
+              size="xl"
+            >
+              <ReorderPropertyImages
+                setShowImagesModal={setShowReorderModal}
+                images={
+                  uploadImages
+                    ? uploadImages
+                    : listing && listing.images
+                    ? listing.images
+                    : null
+                }
+                setTmpImage={setTmpImage}
+                setListing={setListing}
+                setUploadImages={setUploadImages}
+              />
+            </Modal>
             <Modal
               isOpen={showCompanyLogoModal}
               onClose={() => setShowCompanyLogoModal(false)}

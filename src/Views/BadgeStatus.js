@@ -235,7 +235,10 @@ const BadgeStatus = ({ setNavbarTransparent }) => {
                       Badge! If you would like to upgrade your badge to reflect
                       your experience level, you can go{" "}
                       <a
-                        style={{ color: theme.colors.muted["600"] }}
+                        style={{
+                          color: theme.colors.muted["600"],
+                          cursor: "pointer",
+                        }}
                         onClick={() => navigate("/verifybadge")}
                       >
                         here

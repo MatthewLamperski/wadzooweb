@@ -47,26 +47,23 @@ const LandingPage = ({ setNavbarTransparent }) => {
       top: bodyRef.current.offsetTop - 100,
       behavior: "auto",
     });
-  useEffect(() => {
-    setnavbarHeight(
-      document.getElementsByClassName("navbar").item(0).clientHeight
-    );
-  }, []);
-  useEffect(() => {
+  const changeTransparentNavbar = () => {
     let bannerHeight = document
       .getElementsByClassName("banner")
       .item(0).clientHeight;
-    let navbarHeight = document
-      .getElementsByClassName("navbar")
-      .item(0).clientHeight;
-    document.addEventListener("scroll", (e) => {
-      let scrolled = document.scrollingElement.scrollTop;
-      if (scrolled < bannerHeight - navbarHeight) {
-        setNavbarTransparent(true);
-      } else if (scrolled >= bannerHeight - navbarHeight) {
-        setNavbarTransparent(false);
-      }
-    });
+    let scrolled = document.scrollingElement.scrollTop;
+    if (scrolled < bannerHeight) {
+      setNavbarTransparent(true);
+    } else if (scrolled >= bannerHeight) {
+      setNavbarTransparent(false);
+    }
+  };
+  useEffect(() => {
+    window.addEventListener("scroll", changeTransparentNavbar);
+    return () => {
+      console.log("returned");
+      window.removeEventListener("scroll", changeTransparentNavbar);
+    };
   }, []);
   return (
     <div>
