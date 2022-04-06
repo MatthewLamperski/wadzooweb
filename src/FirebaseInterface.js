@@ -76,7 +76,14 @@ export const signInWithEmail = (email, password) => {
   });
 };
 
-export const createUser = ({ firstName, lastName, email }) => {
+export const createUser = ({
+  firstName,
+  lastName,
+  email,
+  companyName,
+  phoneNumber,
+  uid,
+}) => {
   return new Promise((resolve, reject) => {
     const chars =
       "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -85,42 +92,68 @@ export const createUser = ({ firstName, lastName, email }) => {
       password += chars[Math.floor(Math.random() * chars.length)];
     let since = new Date();
     const auth = getAuth(secondaryApp);
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((newUserCredential) => {
-        setDoc(doc(db, "users", newUserCredential.user.uid), {
-          firstName,
-          lastName,
-          email,
-          since,
-        })
-          .then(() => {
-            emailjs
-              .send(
-                "wadzoo",
-                "wadzoo-account-creation",
-                {
-                  email,
-                  firstName,
-                },
-                "user_O8a39t79Xp7F45Kwvqx7L"
-              )
-              .then((status) => {
-                resolve({
-                  newUser: {
-                    uid: newUserCredential.user.uid,
-                    email,
-                    password,
-                    firstName,
-                    lastName,
-                    since,
-                  },
-                });
-              })
-              .catch((err) => reject(err));
+    if (uid) {
+      updateDoc(doc(db, "users", uid), {
+        firstName,
+        lastName,
+        email,
+        ...(companyName ? { companyName } : {}),
+        ...(phoneNumber ? { phoneNumber } : {}),
+      }).then(() => {
+        resolve({
+          newUser: {
+            uid,
+            email,
+            password,
+            firstName,
+            lastName,
+            ...(companyName ? { companyName } : {}),
+            ...(phoneNumber ? { phoneNumber } : {}),
+          },
+        });
+      });
+    } else {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((newUserCredential) => {
+          setDoc(doc(db, "users", newUserCredential.user.uid), {
+            firstName,
+            lastName,
+            email,
+            since,
+            ...(companyName ? { companyName } : {}),
+            ...(phoneNumber ? { phoneNumber } : {}),
           })
-          .catch((err) => reject(err));
-      })
-      .catch((err) => reject(err));
+            .then(() => {
+              emailjs
+                .send(
+                  "wadzoo",
+                  "wadzoo-account-creation",
+                  {
+                    email,
+                    firstName,
+                  },
+                  "user_O8a39t79Xp7F45Kwvqx7L"
+                )
+                .then((status) => {
+                  resolve({
+                    newUser: {
+                      uid: newUserCredential.user.uid,
+                      email,
+                      password,
+                      firstName,
+                      lastName,
+                      since,
+                      ...(companyName ? { companyName } : {}),
+                      ...(phoneNumber ? { phoneNumber } : {}),
+                    },
+                  });
+                })
+                .catch((err) => reject(err));
+            })
+            .catch((err) => reject(err));
+        })
+        .catch((err) => reject(err));
+    }
   });
 };
 
@@ -232,6 +265,10 @@ export const getListing = (docID) => {
   });
 };
 
+export const createVerificationRequest = (request) => {
+  return new Promise((resolve, reject) => {});
+};
+
 export const createStripePaymentSession = (uid, service) => {
   return new Promise((resolve, reject) => {
     getDoc(doc(db, `/products/${service}`))
@@ -273,43 +310,56 @@ export const createListing = (listing, images, docID) => {
   return new Promise((resolve, reject) => {
     const storage = getStorage();
     if (docID) {
-      updateDoc(doc(db, `/${docID}`), listing)
+      updateDoc(doc(db, `/listings/${docID}`), listing)
         .then(() => {
-          let imageUploads = [];
-          for (let i = 0; i < images.length; i++) {
-            uploadBytes(
-              ref(storage, `/listings/${docID}/${docID}${i}`),
-              images[i]
-            )
-              .then(() => {
-                getDownloadURL(
-                  ref(storage, `/listings/${docID}/${docID}${i}`)
-                ).then((url) => {
-                  imageUploads.push(url);
-                  if (imageUploads.length === images.length) {
-                    updateDoc(doc(db, `/listings/${docID}`), {
-                      images: imageUploads,
-                    })
-                      .then((listingDocWithImages) => {
-                        resolve(listingDocWithImages);
+          if (images) {
+            let imageUploads = [];
+            for (let i = 0; i < images.length; i++) {
+              uploadBytes(
+                ref(storage, `/listings/${docID}/${docID}${i}`),
+                images[i]
+              )
+                .then(() => {
+                  getDownloadURL(
+                    ref(storage, `/listings/${docID}/${docID}${i}`)
+                  ).then((url) => {
+                    imageUploads.push(url);
+                    if (imageUploads.length === images.length) {
+                      updateDoc(doc(db, `/listings/${docID}`), {
+                        images: imageUploads,
                       })
-                      .catch((err) => {
-                        console.log("4", err);
-                        reject({
-                          title: "Something went wrong.",
-                          message: "Here is the error: " + JSON.stringify(err),
+                        .then((listingDocWithImages) => {
+                          updateDoc(doc(db, `/users/${listing.lister}`), {
+                            phoneNumber: listing.phoneNumber,
+                            companyName: listing.companyName,
+                          });
+                          resolve(listingDocWithImages);
+                        })
+                        .catch((err) => {
+                          console.log("4", err);
+                          reject({
+                            title: "Something went wrong.",
+                            message:
+                              "Here is the error: " + JSON.stringify(err),
+                          });
                         });
-                      });
-                  }
+                    }
+                  });
+                })
+                .catch((err) => {
+                  console.log("1", err);
+                  reject({
+                    title: "Something went wrong.",
+                    message: "Here is the error: " + JSON.stringify(err),
+                  });
                 });
-              })
-              .catch((err) => {
-                console.log("1", err);
-                reject({
-                  title: "Something went wrong.",
-                  message: "Here is the error: " + JSON.stringify(err),
-                });
-              });
+            }
+          } else {
+            updateDoc(doc(db, `/users/${listing.lister}`), {
+              phoneNumber: listing.phoneNumber,
+              companyName: listing.companyName,
+            });
+            resolve();
           }
         })
         .catch((err) => reject(err));
@@ -328,6 +378,8 @@ export const createListing = (listing, images, docID) => {
               .then((newListingDoc) => {
                 updateDoc(doc(db, `/users/${listing.lister}`), {
                   listings: arrayUnion(newListingDoc.id),
+                  phoneNumber: listing.phoneNumber,
+                  companyName: listing.companyName,
                 })
                   .then(() => {
                     if (images) {
@@ -411,6 +463,14 @@ export const createListing = (listing, images, docID) => {
           });
         });
     }
+  });
+};
+
+export const getAppInfo = () => {
+  return new Promise((resolve, reject) => {
+    getDoc(doc(db, "/app/appInfo"))
+      .then((docSnapshot) => resolve({ ...docSnapshot.data() }))
+      .catch((err) => reject(err));
   });
 };
 

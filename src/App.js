@@ -28,8 +28,8 @@ import { getUserDoc } from "./FirebaseInterface";
 import CreateListing from "./Views/DataEntryDashboard/CreateListing";
 import ManageListings from "./Views/DataEntryDashboard/ManageListings";
 import ListingView from "./Views/ListingView";
-import Checkout from "./Routes/Checkout";
 import BadgeStatus from "./Views/BadgeStatus";
+import Checkout from "./Routes/Checkout";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",

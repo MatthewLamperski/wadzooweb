@@ -83,7 +83,7 @@ exports.deleteListingsCount = functions.firestore
  */
 
 const configuration = new Configuration({
-  basePath: PlaidEnvironments.sandbox,
+  basePath: PlaidEnvironments.development,
   baseOptions: {
     headers: {
       "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
@@ -92,13 +92,6 @@ const configuration = new Configuration({
   },
 });
 const client = new PlaidApi(configuration);
-
-exports.testEnv = functions.https.onRequest((req, res) => {
-  res.send(
-      `Here is what the environment variables returned: 
-      ${process.env.TEST1} ${process.env.TEST2}`
-  );
-});
 
 exports.generateLinkToken = functions.https.onRequest((request, response) => {
   cors(request, response, () => {
@@ -269,62 +262,64 @@ exports.iaphubSubscriptionNoty = functions.https.onRequest(
 exports.verificationPaymentReceived = functions.firestore
     .document("customers/{uid}/payments/{paymentID}")
     .onCreate((snap, context) => {
-      functions.logger.log("New Verification Payment Received");
-      // First update badge to pending
-      const uid = context.params.uid;
-      admin
-          .firestore()
-          .doc(`users/${uid}`)
-          .update({badge: "pending"})
-          .then(() => functions.logger.log("User Badge Updated to Pending"))
-          .catch((err) => functions.logger.error(err));
+      if (snap.data().status === "succeeded") {
+        functions.logger.log("New Verification Payment Received");
+        // First update badge to pending
+        const uid = context.params.uid;
+        admin
+            .firestore()
+            .doc(`users/${uid}`)
+            .update({badge: "pending"})
+            .then(() => functions.logger.log("User Badge Updated to Pending"))
+            .catch((err) => functions.logger.error(err));
 
-      // Next notify Cheryl/Matthew
-      admin
-          .firestore()
-          .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
-          .get()
-          .then((doc) => {
-            const data = doc.data();
-            if ("notificationToken" in data) {
-              const token = data.notificationToken.token;
-              let item;
-              try {
-                const itemDescription = snap.data().items[0].description;
-                if (itemDescription.includes("Advanced")) {
-                  item = "Advanced Verification";
-                } else {
-                  item = "Intermediate Verification";
-                }
-              } catch (err) {
-                functions.logger.log("Couldn't get Item Description.");
+        let item;
+        try {
+          const itemDescription = snap.data().items[0].description;
+          if (itemDescription.includes("Advanced")) {
+            item = "Advanced Verification";
+          } else {
+            item = "Intermediate Verification";
+          }
+        } catch (err) {
+          functions.logger.log("Couldn't get Item Description.");
+        }
+        const notification = {
+          title: "Payment Received for Verification.",
+          body:
+          `New ${item ? item : "Verification"} ` + "purchased. Review ASAP.",
+        };
+        const payload = {
+          notification: {
+            title: notification.title,
+            body: notification.body,
+            sound: "default",
+          },
+        };
+
+        // Next notify Cheryl/Matthew on payment success
+        admin
+            .firestore()
+            .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
+            .get()
+            .then((doc) => {
+              const data = doc.data();
+              if ("notificationToken" in data) {
+                const token = data.notificationToken.token;
+                admin
+                    .messaging()
+                    .sendToDevice(token, payload)
+                    .then(() =>
+                    // eslint-disable-next-line max-len
+                      functions.logger.log("Successfully send Matthew notification")
+                    );
+              } else {
+                functions.logger.log(
+                    "No notification token found for Cheryl/Matthew"
+                );
               }
-              const notification = {
-                title: "Payment Received for Verification.",
-                body:
-              `New ${item ? item : "Verification"} ` +
-              "purchased. Review ASAP.",
-              };
-              const payload = {
-                notification: {
-                  title: notification.title,
-                  body: notification.body,
-                  sound: "default",
-                },
-              };
-              admin
-                  .messaging()
-                  .sendToDevice(token, payload)
-                  .then(() =>
-                  // eslint-disable-next-line max-len
-                    functions.logger.log("Successfully send Matthew notification")
-                  );
-            } else {
-              functions.logger.log(
-                  "No notification token found for Cheryl/Matthew"
-              );
-            }
-          });
+            });
+      }
     });
 
 /**

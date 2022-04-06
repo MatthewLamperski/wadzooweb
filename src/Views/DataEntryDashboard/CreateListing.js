@@ -137,28 +137,32 @@ const CreateListing = ({ setNavbarTransparent }) => {
           setListerPPUrl(null);
           console.log(err);
         });
-    } else {
-      setListerPPUrl(undefined);
     }
   }, [listing]);
   const { state } = useLocation();
   useEffect(() => {
-    if (state.listing && listing === undefined) {
-      setLoading(true);
-      getUserDoc(state.listing.lister)
-        .then((listerDoc) => {
-          setListing({
-            ...state.listing,
-            listerObj: { ...listerDoc },
-          });
-          setLoading(false);
-        })
-        .catch((err) =>
-          setError({
-            title: "Something went wrong.",
-            message: "We couldn't find the lister...",
+    if (listerPPUrl) console.log(listerPPUrl);
+    else console.log("none");
+  }, [listerPPUrl]);
+  useEffect(() => {
+    if (state) {
+      if (state.listing && listing === undefined) {
+        setLoading(true);
+        getUserDoc(state.listing.lister)
+          .then((listerDoc) => {
+            setListing({
+              ...state.listing,
+              listerObj: { ...listerDoc },
+            });
+            setLoading(false);
           })
-        );
+          .catch((err) =>
+            setError({
+              title: "Something went wrong.",
+              message: "We couldn't find the lister...",
+            })
+          );
+      }
     }
   }, []);
   const handleCreateListing = () => {
@@ -185,40 +189,80 @@ const CreateListing = ({ setNavbarTransparent }) => {
               geohash,
               lat,
               lng,
-              created: new Date(),
+              created: listing.created
+                ? new Date(listing.created.seconds * 1000)
+                : new Date(),
             };
-            if (uploadImages) {
-              createListing(newListing, uploadImages)
-                .then((newDoc) => {
-                  toast.success("Listing successfully uploading!");
-                  setListing();
-                  setListerEmail();
-                  setEmailSearchResults();
-                  setCreateLoading(false);
-                  setTmpImage();
-                  setUploadImages();
-                  console.log(JSON.stringify(newDoc, null, 3));
-                })
-                .catch((err) => {
-                  setCreateLoading(false);
-                  setError(err);
-                });
+            if (listing && listing.docID !== undefined) {
+              // We are updating
+              if (uploadImages) {
+                createListing(newListing, uploadImages, listing.docID)
+                  .then((newDoc) => {
+                    toast.success("Listing successfully updated!");
+                    setListing();
+                    setListerEmail();
+                    setEmailSearchResults();
+                    setCreateLoading(false);
+                    setTmpImage();
+                    setUploadImages();
+                    console.log(JSON.stringify(newDoc, null, 3));
+                  })
+                  .catch((err) => {
+                    setCreateLoading(false);
+                    setError(err);
+                  });
+              } else {
+                createListing(newListing, false, listing.docID)
+                  .then((newDoc) => {
+                    toast.success("Listing successfully updated!");
+                    setListing();
+                    setListerEmail();
+                    setEmailSearchResults();
+                    setCreateLoading(false);
+                    setTmpImage();
+                    setUploadImages();
+                    console.log(JSON.stringify(newDoc, null, 3));
+                  })
+                  .catch((err) => {
+                    setCreateLoading(false);
+                    setError(err);
+                  });
+              }
             } else {
-              createListing(newListing)
-                .then((newDoc) => {
-                  toast.success("Listing successfully uploading!");
-                  setListing();
-                  setListerEmail();
-                  setEmailSearchResults();
-                  setCreateLoading(false);
-                  setTmpImage();
-                  setUploadImages();
-                  console.log(JSON.stringify(newDoc, null, 3));
-                })
-                .catch((err) => {
-                  setCreateLoading(false);
-                  setError(err);
-                });
+              // Creating for the first time
+              if (uploadImages) {
+                createListing(newListing, uploadImages)
+                  .then((newDoc) => {
+                    toast.success("Listing successfully uploaded!");
+                    setListing();
+                    setListerEmail();
+                    setEmailSearchResults();
+                    setCreateLoading(false);
+                    setTmpImage();
+                    setUploadImages();
+                    console.log(JSON.stringify(newDoc, null, 3));
+                  })
+                  .catch((err) => {
+                    setCreateLoading(false);
+                    setError(err);
+                  });
+              } else {
+                createListing(newListing)
+                  .then((newDoc) => {
+                    toast.success("Listing successfully uploaded!");
+                    setListing();
+                    setListerEmail();
+                    setEmailSearchResults();
+                    setCreateLoading(false);
+                    setTmpImage();
+                    setUploadImages();
+                    console.log(JSON.stringify(newDoc, null, 3));
+                  })
+                  .catch((err) => {
+                    setCreateLoading(false);
+                    setError(err);
+                  });
+              }
             }
           })
           .catch((err) => {
@@ -241,7 +285,38 @@ const CreateListing = ({ setNavbarTransparent }) => {
   const handleCreateUser = () => {
     if (!createUserLoading) {
       setCreateUserLoading(true);
-      if (newUser && newUser.email && newUser.firstName && newUser.lastName) {
+      if (listing && listing.listerObj) {
+        createUser(listing.listerObj)
+          .then((result) => {
+            toast.success("User Updated successfully.");
+            setListing((prevState) => ({
+              ...prevState,
+              email: result.newUser.email,
+              firstName: result.newUser.firstName,
+              lastName: result.newUser.lastName,
+              listerObj: result.newUser,
+              ...(result.newUser.companyName
+                ? { companyName: result.newUser.companyName }
+                : {}),
+              ...(result.newUser.phoneNumber
+                ? { phoneNumber: result.newUser.phoneNumber }
+                : {}),
+            }));
+            setCreateUserLoading(false);
+            setShowCreateUserModal(false);
+          })
+          .catch((err) => {
+            setError({
+              title: "An error occurred",
+              message: JSON.stringify(err),
+            });
+          });
+      } else if (
+        newUser &&
+        newUser.email &&
+        newUser.firstName &&
+        newUser.lastName
+      ) {
         createUser(newUser)
           .then((result) => {
             toast.success("User created successfully.");
@@ -251,6 +326,12 @@ const CreateListing = ({ setNavbarTransparent }) => {
               firstName: result.newUser.firstName,
               lastName: result.newUser.lastName,
               listerObj: result.newUser,
+              ...(result.newUser.companyName
+                ? { companyName: result.newUser.companyName }
+                : {}),
+              ...(result.newUser.phoneNumber
+                ? { phoneNumber: result.newUser.phoneNumber }
+                : {}),
             }));
             setCreateUserLoading(false);
             setShowCreateUserModal(false);
@@ -411,12 +492,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                             </Text>
                             <Pressable
                               onPress={() => {
+                                setListerPPUrl();
                                 setListing((prevState) => {
                                   let tmpListing = prevState;
                                   delete tmpListing.listerObj;
                                   delete tmpListing.email;
                                   delete tmpListing.firstName;
                                   delete tmpListing.lastName;
+                                  delete tmpListing.phoneNumber;
+                                  delete tmpListing.companyName;
                                   return { ...tmpListing };
                                 });
                               }}
@@ -489,6 +573,12 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                 </HStack>
                                 {listing.email}
                               </div>
+                              <Button
+                                variant="subtle"
+                                onPress={() => setShowCreateUserModal(true)}
+                              >
+                                Edit User
+                              </Button>
                             </div>
                           </Box>
                           {listerPPUrl === null && (
@@ -575,6 +665,12 @@ const CreateListing = ({ setNavbarTransparent }) => {
                                     firstName: user.firstName,
                                     lastName: user.lastName,
                                     listerObj: user,
+                                    ...(user.companyName
+                                      ? { companyName: user.companyName }
+                                      : {}),
+                                    ...(user.phoneNumber
+                                      ? { phoneNumber: user.phoneNumber }
+                                      : {}),
                                   }));
                                   toast.success("Lister updated!");
                                 }}
@@ -602,6 +698,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       )}
                     </div>
                     <div className="py-2">
+                      {listing && listing.docID && (
+                        <Button
+                          variant="subtle"
+                          onPress={() => setShowReorderModal(true)}
+                          my={3}
+                        >
+                          Reorder Property Images
+                        </Button>
+                      )}
                       <Text
                         fontSize={18}
                         fontWeight={300}
@@ -1037,17 +1142,12 @@ const CreateListing = ({ setNavbarTransparent }) => {
                         onPress={() => setShowImagesModal(true)}
                         variant="subtle"
                       >
-                        Add Property Images
+                        {`${
+                          listing && listing.docID !== undefined
+                            ? "Change"
+                            : "Add"
+                        } Property Images`}
                       </Button>
-                      {((listing && listing.images) || uploadImages) && (
-                        <Button
-                          variant="subtle"
-                          onPress={() => setShowReorderModal(true)}
-                          my={3}
-                        >
-                          Reorder Property Images
-                        </Button>
-                      )}
                       <div className="py-2">
                         <Text
                           fontSize={18}
@@ -1873,6 +1973,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               "firstName",
                               "lastName",
                               "docID",
+                              "listerObj",
                             ],
                             3
                           )
@@ -1911,9 +2012,10 @@ const CreateListing = ({ setNavbarTransparent }) => {
               isOpen={showReorderModal}
               onClose={() => setShowReorderModal(false)}
               _backdrop={{ bg: "warmGray.500" }}
-              size="xl"
+              size="full"
             >
               <ReorderPropertyImages
+                listing={listing}
                 setShowImagesModal={setShowReorderModal}
                 images={
                   uploadImages
@@ -1922,6 +2024,19 @@ const CreateListing = ({ setNavbarTransparent }) => {
                     ? listing.images
                     : null
                 }
+                setTmpImage={setTmpImage}
+                setListing={setListing}
+                setUploadImages={setUploadImages}
+              />
+            </Modal>
+            <Modal
+              isOpen={showImagesModal}
+              onClose={() => setShowImagesModal(false)}
+              _backdrop={{ bg: "warmGray.500" }}
+              size="xl"
+            >
+              <AddPropertyImages
+                setShowImagesModal={setShowImagesModal}
                 setTmpImage={setTmpImage}
                 setListing={setListing}
                 setUploadImages={setUploadImages}
@@ -1944,19 +2059,6 @@ const CreateListing = ({ setNavbarTransparent }) => {
               )}
             </Modal>
             <Modal
-              isOpen={showImagesModal}
-              onClose={() => setShowImagesModal(false)}
-              _backdrop={{ bg: "warmGray.500" }}
-              size="xl"
-            >
-              <AddPropertyImages
-                setShowImagesModal={setShowImagesModal}
-                setTmpImage={setTmpImage}
-                setListing={setListing}
-                setUploadImages={setUploadImages}
-              />
-            </Modal>
-            <Modal
               isOpen={showCreateUserModal}
               onClose={() => setShowCreateUserModal(false)}
               _backdrop={{ bg: "warmGray.500" }}
@@ -1973,7 +2075,11 @@ const CreateListing = ({ setNavbarTransparent }) => {
               >
                 <Modal.CloseButton colorScheme="red" />
                 <Modal.Header borderBottomWidth={0}>
-                  <Text fontSize={20}>Create User</Text>
+                  <Text fontSize={20}>
+                    {listing && listing.listerObj
+                      ? "Update User"
+                      : "Create User"}
+                  </Text>
                 </Modal.Header>
                 <Modal.Body bg="white" p={8}>
                   <Text>Name</Text>
@@ -1984,14 +2090,28 @@ const CreateListing = ({ setNavbarTransparent }) => {
                     <Col xs={12} md={6}>
                       <Input
                         value={
-                          newUser && newUser.firstName ? newUser.firstName : ""
+                          listing && listing.listerObj
+                            ? listing.listerObj.firstName
+                            : newUser && newUser.firstName
+                            ? newUser.firstName
+                            : ""
                         }
-                        onChangeText={(text) =>
-                          setNewUser((prevState) => ({
-                            ...prevState,
-                            firstName: text,
-                          }))
-                        }
+                        onChangeText={(text) => {
+                          if (listing && listing.listerObj) {
+                            setListing((prevState) => ({
+                              ...prevState,
+                              listerObj: {
+                                ...prevState.listerObj,
+                                firstName: text,
+                              },
+                            }));
+                          } else {
+                            setNewUser((prevState) => ({
+                              ...prevState,
+                              firstName: text,
+                            }));
+                          }
+                        }}
                         size="lg"
                         variant="underlined"
                         w="100%"
@@ -2001,14 +2121,28 @@ const CreateListing = ({ setNavbarTransparent }) => {
                     <Col xs={12} md={6}>
                       <Input
                         value={
-                          newUser && newUser.lastName ? newUser.lastName : ""
+                          listing && listing.listerObj
+                            ? listing.listerObj.lastName
+                            : newUser && newUser.lastName
+                            ? newUser.lastName
+                            : ""
                         }
-                        onChangeText={(text) =>
-                          setNewUser((prevState) => ({
-                            ...prevState,
-                            lastName: text,
-                          }))
-                        }
+                        onChangeText={(text) => {
+                          if (listing && listing.listerObj) {
+                            setListing((prevState) => ({
+                              ...prevState,
+                              listerObj: {
+                                ...prevState.listerObj,
+                                lastName: text,
+                              },
+                            }));
+                          } else {
+                            setNewUser((prevState) => ({
+                              ...prevState,
+                              lastName: text,
+                            }));
+                          }
+                        }}
                         size="lg"
                         variant="underlined"
                         w="100%"
@@ -2018,21 +2152,115 @@ const CreateListing = ({ setNavbarTransparent }) => {
                   </Row>
                   <Text>Email</Text>
                   <Row
+                    className="mb-4"
                     style={{ justifyContent: "center", alignItems: "center" }}
                   >
                     <Col>
                       <Input
-                        value={newUser && newUser.email ? newUser.email : ""}
-                        onChangeText={(text) =>
-                          setNewUser((prevState) => ({
-                            ...prevState,
-                            email: text,
-                          }))
+                        value={
+                          listing && listing.listerObj
+                            ? listing.listerObj.email
+                            : newUser && newUser.email
+                            ? newUser.email
+                            : ""
                         }
+                        onChangeText={(text) => {
+                          if (listing && listing.listerObj) {
+                            setListing((prevState) => ({
+                              ...prevState,
+                              listerObj: {
+                                ...prevState.listerObj,
+                                email: text,
+                              },
+                              email: text,
+                            }));
+                          } else {
+                            setNewUser((prevState) => ({
+                              ...prevState,
+                              email: text,
+                            }));
+                          }
+                        }}
                         size="lg"
                         variant="underlined"
                         w="100%"
                         placeholder="Email Address"
+                      />
+                    </Col>
+                  </Row>
+                  <Text>Phone Number</Text>
+                  <Row
+                    className="mb-3"
+                    style={{ justifyContent: "center", alignItems: "center" }}
+                  >
+                    <Col>
+                      <Input
+                        value={
+                          listing && listing.listerObj
+                            ? listing.listerObj.phoneNumber
+                            : newUser && newUser.phoneNumber
+                            ? newUser.phoneNumber
+                            : ""
+                        }
+                        onChangeText={(text) => {
+                          if (listing && listing.listerObj) {
+                            setListing((prevState) => ({
+                              ...prevState,
+                              listerObj: {
+                                ...prevState.listerObj,
+                                phoneNumber: text,
+                              },
+                              phoneNumber: text,
+                            }));
+                          } else {
+                            setNewUser((prevState) => ({
+                              ...prevState,
+                              phoneNumber: text,
+                            }));
+                          }
+                        }}
+                        size="lg"
+                        variant="underlined"
+                        w="100%"
+                        placeholder="Only numbers, no dashes (ex. 1234567890)"
+                      />
+                    </Col>
+                  </Row>
+                  <Text>Company Name</Text>
+                  <Row
+                    className="mb-3"
+                    style={{ justifyContent: "center", alignItems: "center" }}
+                  >
+                    <Col>
+                      <Input
+                        value={
+                          listing && listing.listerObj
+                            ? listing.listerObj.companyName
+                            : newUser && newUser.companyName
+                            ? newUser.companyName
+                            : ""
+                        }
+                        onChangeText={(text) => {
+                          if (listing && listing.listerObj) {
+                            setListing((prevState) => ({
+                              ...prevState,
+                              listerObj: {
+                                ...prevState.listerObj,
+                                companyName: text,
+                              },
+                              companyName: text,
+                            }));
+                          } else {
+                            setNewUser((prevState) => ({
+                              ...prevState,
+                              companyName: text,
+                            }));
+                          }
+                        }}
+                        size="lg"
+                        variant="underlined"
+                        w="100%"
+                        placeholder="Company Name"
                       />
                     </Col>
                   </Row>
@@ -2051,7 +2279,9 @@ const CreateListing = ({ setNavbarTransparent }) => {
                       {createUserLoading ? (
                         <Spinner color="white" />
                       ) : (
-                        <Text>Create</Text>
+                        <Text>
+                          {listing && listing.listerObj ? "Update" : "Create"}
+                        </Text>
                       )}
                     </Button>
                   </Button.Group>

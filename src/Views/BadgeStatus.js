@@ -1,14 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Col, Row } from "react-bootstrap";
 import { Box, Image, PresenceTransition, Text, useTheme } from "native-base";
 import { AppContext } from "../AppContext";
 import PortalAuth from "../Routes/PortalAuth";
 import LoadingScreen from "./LoadingScreen";
 import "./BadgeStatus.css";
-import { FaUser } from "react-icons/fa";
 import { getProfilePicURL } from "../FirebaseInterface";
-import LogoLongWhite from "../Assets/LogoLongWhite.png";
 import { useNavigate } from "react-router-dom";
+import LogoLongWhite from "../Assets/LogoLongWhite.png";
+import { FaUser } from "react-icons/fa";
 
 export const AdvancedBadge = () => {
   const theme = useTheme();
@@ -140,13 +139,9 @@ const BadgeStatus = ({ setNavbarTransparent }) => {
               src={LogoLongWhite}
             />
           </div>
-          <Row className="d-flex justify-content-center align-content-center">
-            <Col
-              xs={10}
-              md={8}
-              lg={6}
-              xl={4}
-              className="py-4"
+          <div className="d-flex justify-content-center align-content-center m-5">
+            <div
+              className="p-4"
               style={{
                 backgroundColor: "white",
                 boxShadow:
@@ -158,9 +153,9 @@ const BadgeStatus = ({ setNavbarTransparent }) => {
                 style={{
                   borderRadius: 8,
                 }}
-                className="d-flex flex-grow-1 flex-column justify-content-center align-items-center pt-4 p-2"
+                className="d-flex flex-grow-1 flex-column justify-content-center align-items-center mb-2 pt-4 p-2"
               >
-                <div style={{ position: "relative" }}>
+                <div className="mb-4" style={{ position: "relative" }}>
                   <Image
                     key={profilePic ? profilePic : "wadzoo.com"}
                     height={125}
@@ -208,7 +203,15 @@ const BadgeStatus = ({ setNavbarTransparent }) => {
                     <Text color="muted.400" fontSize={16}>
                       Your request has been successfully submitted!
                     </Text>
-                    <Text pt={5} color="muted.400" fontSize={16}>
+                    <Text
+                      pt={5}
+                      color="secondary.800"
+                      fontWeight={300}
+                      fontSize={20}
+                    >
+                      What next?
+                    </Text>
+                    <Text color="muted.400" fontSize={16}>
                       You will be notified when there is action taken on your
                       request, and you can return to this page to check your
                       status.
@@ -259,8 +262,8 @@ const BadgeStatus = ({ setNavbarTransparent }) => {
                   <Text color="primary.700">Need some assistance?</Text>
                 </a>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
         </div>
       </PresenceTransition>
     );

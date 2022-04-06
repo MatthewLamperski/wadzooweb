@@ -63,6 +63,7 @@ const Checkout = ({ setNavbarTransparent }) => {
       });
       const data = await response.json();
       setLinkToken(data.link_token);
+      console.log("DATA", data);
     } catch (err) {
       setError({
         title: "We couldn't connect to the internet.",
@@ -825,6 +826,7 @@ const PlaidLink = ({
         }
       );
       let data = await response.json();
+      console.log(data);
       setAccounts(data.accounts);
       setLoadingAccounts(false);
     },

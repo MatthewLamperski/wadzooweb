@@ -44,6 +44,7 @@ const ListingView = ({ setNavbarTransparent }) => {
     arrows: true,
     infinite: true,
     easing: "ease",
+    loop: false,
   };
   const { docID } = useParams();
   const { user, setError } = useContext(AppContext);

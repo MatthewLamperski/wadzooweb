@@ -10,11 +10,41 @@ import {
   Text,
   useTheme,
 } from "native-base";
-import { getProdListings } from "../../FirebaseInterface";
-import { Container } from "react-bootstrap";
+import { getAppInfo, getProdListings } from "../../FirebaseInterface";
+import { Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./ManageListings.css";
 import { FaArrowCircleRight } from "react-icons/all";
 import { useNavigate } from "react-router-dom";
+
+export const dateDiff = (postDate, long) => {
+  let now = new Date();
+  let seconds = Math.round(
+    (now.getTime() - postDate.toDate().getTime()) / 1000
+  );
+  if (!long) {
+    if (seconds < 59) {
+      return "just now";
+    } else if (seconds / 60 < 59) {
+      return `${Math.round(seconds / 60).toString()}m`;
+    } else if (seconds / 3600 < 23) {
+      return `${Math.round(seconds / 3600).toString()}h`;
+    } else if (seconds / 86400 < 5) {
+      return `${Math.round(seconds / 86400).toString()}d`;
+    } else {
+      let dateObj = postDate.toDate();
+      return `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj
+        .getFullYear()
+        .toString()
+        .substring(-2)}`;
+    }
+  } else {
+    let dateObj = postDate.toDate();
+    return `${dateObj.getMonth() + 1}-${dateObj.getDate()}-${dateObj
+      .getFullYear()
+      .toString()
+      .substring(-2)}`;
+  }
+};
 
 const ManageListings = ({ setNavbarTransparent }) => {
   const navigate = useNavigate();
@@ -29,6 +59,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
   }, []);
 
   const [listings, setListings] = useState();
+  const [listingsCount, setListingsCount] = useState();
   const [lastVisible, setLastVisible] = useState();
   const [getMoreLoading, setGetMoreLoading] = useState(false);
   useEffect(() => {
@@ -46,6 +77,18 @@ const ManageListings = ({ setNavbarTransparent }) => {
             JSON.stringify(err),
         });
       });
+    getAppInfo()
+      .then(({ listingsCount }) => {
+        console.log(listingsCount);
+        setListingsCount(listingsCount);
+      })
+      .catch((err) => {
+        console.log(err);
+        setError({
+          title: "Couldn't load number of listings.",
+          message: "Please try again later.",
+        });
+      });
   }, []);
   const getMoreListings = () => {
     setGetMoreLoading(true);
@@ -56,6 +99,9 @@ const ManageListings = ({ setNavbarTransparent }) => {
       setGetMoreLoading(false);
     });
   };
+  const renderTooltip = (props) => (
+    <Tooltip {...props}>This number may take some time to update.</Tooltip>
+  );
   if (user && user.role) {
     if (user.role === "dataEntry" || user.role === "admin") {
       return (
@@ -73,9 +119,25 @@ const ManageListings = ({ setNavbarTransparent }) => {
             }}
           >
             <Container className="py-5">
-              <div className="py-2">
-                <Text color="secondary.800" fontWeight={300} fontSize={24}>
-                  Listings
+              <div className="py-2 d-flex flex-row justify-content-between align-items-center">
+                <div className="flex-column d-flex justify-content-center align-items-start">
+                  <Text color="secondary.800" fontWeight={300} fontSize={24}>
+                    Listings
+                  </Text>
+                  {listingsCount && (
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 400 }}
+                      overlay={renderTooltip}
+                    >
+                      <Text color="muted.400" fontWeight={300} fontSize={14}>
+                        {listingsCount} results
+                      </Text>
+                    </OverlayTrigger>
+                  )}
+                </div>
+                <Text color="muted.400" fontWeight={300} fontSize={14}>
+                  Sorted by date (more options coming soon)
                 </Text>
               </div>
               <div
@@ -117,6 +179,13 @@ const ManageListings = ({ setNavbarTransparent }) => {
                               <Text fontSize={16} color="secondary.800">
                                 {listing.address}, {listing.city}{" "}
                                 {listing.state}
+                              </Text>
+                              <Text
+                                fontSize={14}
+                                color="muted.500"
+                                fontWeight={300}
+                              >
+                                {dateDiff(listing.created, true)}
                               </Text>
                               <Text color="muted.400">
                                 $
