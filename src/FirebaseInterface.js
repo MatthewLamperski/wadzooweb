@@ -265,8 +265,30 @@ export const getListing = (docID) => {
   });
 };
 
-export const createVerificationRequest = (request) => {
-  return new Promise((resolve, reject) => {});
+export const createVerificationRequest = (request, files) => {
+  return new Promise((resolve, reject) => {
+    setDoc(doc(db, `/verification/${request.uid}`), request)
+      .then((newDoc) => {
+        console.log(newDoc);
+        if (files) {
+          const storage = getStorage();
+          let filesUploaded = 0;
+          for (let i = 0; i < files.length; i++) {
+            uploadBytes(ref(storage, `/verification/${newDoc.id}`), files[0])
+              .then(() => {
+                filesUploaded++;
+                if (filesUploaded === files.length) {
+                  resolve();
+                }
+              })
+              .catch((err) => reject());
+          }
+        } else {
+          resolve();
+        }
+      })
+      .catch((err) => reject(err));
+  });
 };
 
 export const createStripePaymentSession = (uid, service) => {

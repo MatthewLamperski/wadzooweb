@@ -273,6 +273,13 @@ exports.verificationPaymentReceived = functions.firestore
             .then(() => functions.logger.log("User Badge Updated to Pending"))
             .catch((err) => functions.logger.error(err));
 
+        admin
+            .firestore()
+            .doc(`verification/${uid}`)
+            .update({status: "paymentReceived"})
+            .then(() => functions.logger.log("Verification doc updated."))
+            .catch((err) => functions.logger.error(err));
+
         let item;
         try {
           const itemDescription = snap.data().items[0].description;
@@ -319,6 +326,35 @@ exports.verificationPaymentReceived = functions.firestore
                 );
               }
             });
+        admin
+            .firestore()
+            .doc("users/Kh9LRgv0x4Zc1x8QtHVBDNkCvYG2")
+            .get()
+            .then((doc) => {
+              const data = doc.data();
+              if ("notificationToken" in data) {
+                const token = data.notificationToken.token;
+                admin
+                    .messaging()
+                    .sendToDevice(token, payload)
+                    .then(() =>
+                    // eslint-disable-next-line max-len
+                      functions.logger.log("Successfully send Matthew notification")
+                    );
+              } else {
+                functions.logger.log(
+                    "No notification token found for Cheryl/Matthew"
+                );
+              }
+            });
+      } else if (snap.data().status === "canceled") {
+        const uid = context.params.uid;
+        admin
+            .firestore()
+            .doc(`verification/${uid}`)
+            .update({status: "paymentCanceled"})
+            .then(() => functions.logger.log("Verification doc updated."))
+            .catch((err) => functions.logger.error(err));
       }
     });
 

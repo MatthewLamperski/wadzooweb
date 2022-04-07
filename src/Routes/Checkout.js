@@ -22,7 +22,10 @@ import {
 } from "react-icons/all";
 import { usePlaidLink } from "react-plaid-link";
 import PlaidLogo from "../Assets/svgs/PlaidLogo.svg";
-import { createStripePaymentSession } from "../FirebaseInterface";
+import {
+  createStripePaymentSession,
+  createVerificationRequest,
+} from "../FirebaseInterface";
 
 const headers = {
   "Content-Type": "application/json",
@@ -42,12 +45,13 @@ const Checkout = ({ setNavbarTransparent }) => {
   const { user, setError, setUser } = useContext(AppContext);
   const theme = useTheme();
   const [step, setStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState([1, 2]);
+  const [completedSteps, setCompletedSteps] = useState([]);
   const [linkToken, setLinkToken] = useState(null);
   const [accounts, setAccounts] = useState();
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [hideLink, setHideLink] = useState(false);
   const [request, setRequest] = useState();
+  const [selectedFiles, setSelectedFiles] = useState();
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -233,7 +237,6 @@ const Checkout = ({ setNavbarTransparent }) => {
   const StepTwo = () => {
     const [dragging, setDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [selectedFiles, setSelectedFiles] = useState();
     const [requestSent, setRequestSent] = useState(false);
     let dragCounter = 0;
     const dropRef = useRef(null);
@@ -269,10 +272,12 @@ const Checkout = ({ setNavbarTransparent }) => {
     };
     useEffect(() => {
       let div = dropRef.current;
-      div.addEventListener("dragenter", handleDragIn);
-      div.addEventListener("dragleave", handleDragOut);
-      div.addEventListener("dragover", handleDrag);
-      div.addEventListener("drop", handleDrop);
+      if (div) {
+        div.addEventListener("dragenter", handleDragIn);
+        div.addEventListener("dragleave", handleDragOut);
+        div.addEventListener("dragover", handleDrag);
+        div.addEventListener("drop", handleDrop);
+      }
 
       return () => {
         if (div) {
@@ -304,33 +309,128 @@ const Checkout = ({ setNavbarTransparent }) => {
           verification team.
         </Text>
         {(selectedFiles && selectedFiles.length) || requestSent ? (
-          <div className="py-4 d-flex flex-column">
+          <div style={{ width: "100%" }} className="py-4 d-flex flex-column">
             {selectedFiles && selectedFiles.length ? (
-              <Text fontWeight={300} fontSize={18} color="secondary.800">
-                {selectedFiles.length} Files selected
-              </Text>
-            ) : (
-              <Text fontWeight={300} fontSize={18} color="secondary.800">
-                Your request will be sent in the next step!
-              </Text>
-            )}
-            <div className="d-flex">
-              <Button
-                size="sm"
-                px={5}
-                rounded="3xl"
-                onPress={() => {
-                  setRequest((prevState) => ({
-                    ...prevState,
-                    deals: selectedFiles ? "files" : "requestCall",
-                  }));
-                  setCompletedSteps((prevState) => [...prevState, 2]);
-                  setStep(3);
+              <div
+                style={{
+                  borderRadius: 8,
+                  backgroundColor: theme.colors.secondary["900"] + "09",
+                  width: "100%",
+                  position: "relative",
                 }}
+                className="d-flex flex-row p-3"
               >
-                Next Step
-              </Button>
-            </div>
+                <div>
+                  <div
+                    className="circle"
+                    style={{
+                      backgroundColor: theme.colors.primary["400"],
+                      margin: 10,
+                    }}
+                  >
+                    <FaCheck color="white" />
+                  </div>
+                </div>
+                <div style={{ margin: 10 }} className="d-flex flex-column">
+                  <Text fontWeight={300} fontSize={18} color="secondary.800">
+                    {`${selectedFiles.length} file${
+                      selectedFiles.length === 1 ? "" : "s"
+                    } selected`}
+                  </Text>
+                  <Text fontSize={14} color="muted.400">
+                    Please proceed to the next step.
+                  </Text>
+                  <div className="d-flex flex-row justify-content-start align-items-center">
+                    <Button
+                      size="sm"
+                      px={5}
+                      rounded="3xl"
+                      variant="outline"
+                      onPress={() => setSelectedFiles()}
+                      _text={{ fontWeight: 200, color: "black" }}
+                      mr={3}
+                      _hover={{ color: "white" }}
+                    >
+                      Undo
+                    </Button>
+                    <Button
+                      size="sm"
+                      px={5}
+                      rounded="3xl"
+                      onPress={() => {
+                        setRequest((prevState) => ({
+                          ...prevState,
+                          deals: selectedFiles ? "files" : "requestCall",
+                        }));
+                        setCompletedSteps((prevState) => [...prevState, 2]);
+                        setStep(3);
+                      }}
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  borderRadius: 8,
+                  backgroundColor: theme.colors.secondary["900"] + "09",
+                  width: "100%",
+                  position: "relative",
+                }}
+                className="d-flex flex-row p-3"
+              >
+                <div className="d-flex flex-column align-items-center">
+                  <div
+                    className="circle"
+                    style={{
+                      backgroundColor: theme.colors.primary["400"],
+                      margin: 10,
+                    }}
+                  >
+                    <FaCheck color="white" />
+                  </div>
+                </div>
+                <div style={{ margin: 10 }} className="d-flex flex-column">
+                  <Text fontWeight={300} fontSize={18} color="secondary.800">
+                    Your request has been recorded.
+                  </Text>
+                  <Text fontSize={14} color="muted.400">
+                    Please proceed to the next step.
+                  </Text>
+                  <div className="d-flex flex-row justify-content-start align-items-center">
+                    <Button
+                      size="sm"
+                      px={5}
+                      rounded="3xl"
+                      variant="outline"
+                      onPress={() => setRequestSent(false)}
+                      _text={{ fontWeight: 200, color: "black" }}
+                      mr={3}
+                      _hover={{ color: "white" }}
+                    >
+                      Undo
+                    </Button>
+                    <Button
+                      size="sm"
+                      px={5}
+                      rounded="3xl"
+                      onPress={() => {
+                        setRequest((prevState) => ({
+                          ...prevState,
+                          deals: selectedFiles ? "files" : "requestCall",
+                        }));
+                        setCompletedSteps((prevState) => [...prevState, 2]);
+                        setStep(3);
+                      }}
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div
@@ -418,6 +518,36 @@ const Checkout = ({ setNavbarTransparent }) => {
 
   const StepThree = () => {
     const [loading, setLoading] = useState(false);
+    const handleSentRequest = () => {
+      setLoading(true);
+      const newRequest = {
+        ...request,
+        uid: user.uid,
+        status: "pendingPayment",
+      };
+      createVerificationRequest(newRequest, selectedFiles)
+        .then(() => {
+          createStripePaymentSession(user.uid, service)
+            .then((url) => {
+              window.location = url;
+            })
+            .catch((err) => {
+              console.log(err);
+              setError({
+                title: "Something went wrong...",
+                message: "Here is the error: " + err,
+              });
+            });
+        })
+        .catch((err) => {
+          console.log(err);
+          setError({
+            title: "Something went wrong...",
+            message:
+              "Please try again later, or contact development@wadzoo.com",
+          });
+        });
+    };
     return (
       <div
         style={{ width: "100%" }}
@@ -449,7 +579,13 @@ const Checkout = ({ setNavbarTransparent }) => {
               <Text px={3} fontSize={14} color="muted.400">
                 {!completedSteps.includes(1)
                   ? "You must submit your funding verification before you can go further."
-                  : "Everything looks good!"}
+                  : `Total account balance: ${formatter.format(
+                      Number(
+                        accounts
+                          .map((account) => account.balances.current)
+                          .reduce((partialSum, num) => partialSum + num, 0)
+                      )
+                    )}`}
               </Text>
             </div>
           </div>
@@ -475,7 +611,11 @@ const Checkout = ({ setNavbarTransparent }) => {
               <Text px={3} fontSize={14} color="muted.400">
                 {!completedSteps.includes(2)
                   ? "You must submit proof of deals (or request a call) before you can continue."
-                  : "Everything looks good!"}
+                  : request.deals === "requestCall"
+                  ? "Our verification team will reach out shortly."
+                  : `You have uploaded ${selectedFiles.length} file${
+                      selectedFiles.length === 1 ? "" : "s"
+                    }`}
               </Text>
             </div>
           </div>
@@ -505,22 +645,18 @@ const Checkout = ({ setNavbarTransparent }) => {
           }
           px={5}
           rounded="3xl"
-          onPress={() => {
-            setLoading(true);
-            createStripePaymentSession(user.uid, service)
-              .then((url) => {
-                window.location = url;
-              })
-              .catch((err) => {
-                console.log(err);
-                setError({
-                  title: "Something went wrong...",
-                  message: "Here is the error: " + err,
-                });
-              });
-          }}
+          onPress={handleSentRequest}
         >
-          {loading ? <Spinner button /> : "Checkout"}
+          {loading ? (
+            <div className="d-flex flex-row justify-content-center align-items-start">
+              <Spinner button />
+              <Text px={3} color="white" fontSize="sm">
+                Processing...
+              </Text>
+            </div>
+          ) : (
+            "Checkout"
+          )}
         </Button>
       </div>
     );

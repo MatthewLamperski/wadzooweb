@@ -90,7 +90,7 @@ export const appTheme = extendTheme({
     Button: {
       variants: {
         solid: {
-          bg: "primary.500",
+          bg: "primary.400",
           pt: 2,
           pb: 2,
           my: 3,
