@@ -265,6 +265,47 @@ export const getListing = (docID) => {
   });
 };
 
+export const getVerificationRequests = (lastVisible) => {
+  return new Promise((resolve, reject) => {
+    let q = lastVisible
+      ? query(
+          collection(db, "verification"),
+          where("status", "in", ["paymentReceived", "pendingPayment"]),
+          orderBy("created", "asc"),
+          startAfter(lastVisible),
+          limit(8)
+        )
+      : query(
+          collection(db, "verification"),
+          where("status", "in", ["paymentReceived", "pendingPayment"]),
+          orderBy("created", "asc"),
+          limit(8)
+        );
+    getDocs(q)
+      .then((snapshot) => {
+        if (!snapshot.empty) {
+          resolve({
+            requests: snapshot.docs.map((doc) => ({
+              docID: doc.id,
+              ...doc.data(),
+            })),
+            lastVisible:
+              snapshot.docs[snapshot.docs.length - 1] &&
+              snapshot.docs.length >= 8
+                ? snapshot.docs[snapshot.docs.length - 1]
+                : null,
+          });
+        } else {
+          resolve({
+            requests: [],
+            lastVisible: null,
+          });
+        }
+      })
+      .catch((err) => reject(err));
+  });
+};
+
 export const createVerificationRequest = (request, files) => {
   return new Promise((resolve, reject) => {
     setDoc(doc(db, `/verification/${request.uid}`), request)

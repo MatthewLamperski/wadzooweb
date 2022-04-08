@@ -30,6 +30,10 @@ import ManageListings from "./Views/DataEntryDashboard/ManageListings";
 import ListingView from "./Views/ListingView";
 import BadgeStatus from "./Views/BadgeStatus";
 import Checkout from "./Routes/Checkout";
+import AdminDashboard from "./Views/AdminDashboard/AdminDashboard";
+import AnalyticsView from "./Views/AdminDashboard/AnalyticsView";
+import VerificationRequestsView from "./Views/AdminDashboard/VerificationRequestsView";
+import WhitelistView from "./Views/AdminDashboard/WhitelistView";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -48,6 +52,7 @@ export const analytics = getAnalytics(app);
 
 function App() {
   const [navbarTransparent, setNavbarTransparent] = useState(true);
+  const [navbarHidden, setNavbarHidden] = useState(false);
   const [FIRUser, setFIRUser] = useState();
   const [user, setUser] = useState();
   const [error, setError] = useState();
@@ -99,6 +104,7 @@ function App() {
           <NavBar
             navbarTransparent={navbarTransparent}
             setNavbarTransparent={setNavbarTransparent}
+            navbarHidden={navbarHidden}
           />
           <Routes>
             <Route
@@ -179,6 +185,23 @@ function App() {
                 <BadgeStatus setNavbarTransparent={setNavbarTransparent} />
               }
             />
+            <Route
+              path="admin"
+              element={
+                <AdminDashboard
+                  setNavbarTransparent={setNavbarTransparent}
+                  setNavbarHidden={setNavbarHidden}
+                />
+              }
+            >
+              <Route index element={<AnalyticsView />} />
+              <Route path="analytics" element={<AnalyticsView />} />
+              <Route
+                path="verifications"
+                element={<VerificationRequestsView />}
+              />
+              <Route path="whitelist" element={<WhitelistView />} />
+            </Route>
           </Routes>
           <Footer />
           <ToastContainer hideProgressBar />

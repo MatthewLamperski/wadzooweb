@@ -139,8 +139,11 @@ const Checkout = ({ setNavbarTransparent }) => {
             </Text>
             <Text fontSize={18} color="muted.500">
               Wadzoo uses Plaid to verify you have access to at least $
-              {service === "verifyAdvanced" ? "500" : "300"}k. We never access
-              your bank account credentials.
+              {service === "verifyAdvanced" ? "500" : "300"}k.
+            </Text>
+            <Text fontSize={18} color="muted.500">
+              Plaid is the safest option to share your financial info with
+              Wadzoo. Your bank account credentials are never stored.
             </Text>
           </div>
         </PresenceTransition>
@@ -523,7 +526,11 @@ const Checkout = ({ setNavbarTransparent }) => {
       const newRequest = {
         ...request,
         uid: user.uid,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         status: "pendingPayment",
+        created: new Date(),
       };
       createVerificationRequest(newRequest, selectedFiles)
         .then(() => {
@@ -948,6 +955,7 @@ const PlaidLink = ({
   const { open, ready, error } = usePlaidLink({
     token: linkToken,
     onSuccess: async (public_token, metadata) => {
+      setHideLink(true);
       setLoadingAccounts(true);
       const accessTokenData = await getAccessToken(public_token);
       console.log("ACCESS TOKEN DATA", accessTokenData);
@@ -962,13 +970,11 @@ const PlaidLink = ({
         }
       );
       let data = await response.json();
-      console.log(data);
       setAccounts(data.accounts);
       setLoadingAccounts(false);
     },
     onExit: (error, metadata) => {
       console.log("error", error, metadata);
-      setHideLink(true);
     },
   });
   return (

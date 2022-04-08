@@ -15,7 +15,7 @@ import {
 import { AppContext } from "../AppContext";
 import { useNavigate } from "react-router-dom";
 
-const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
+const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
   const { FIRUser, user } = useContext(AppContext);
   const [show, setShow] = useState(false);
   const theme = useTheme();
@@ -33,6 +33,7 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent }) => {
         boxShadow: navbarTransparent
           ? null
           : "0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
+        display: navbarHidden ? "none" : null,
       }}
     >
       <Container fluid>
