@@ -186,14 +186,31 @@ const Checkout = ({ setNavbarTransparent }) => {
                     } badge.`}
               </Text>
               {!balanceisApproved(accounts) && (
-                <Text py={3}>
-                  {`Wadzoo requires access to at least $${
-                    service === "verifyAdvanced" ? "500,000" : "300,000"
-                  } for an ${
-                    service === "verifyAdvanced" ? "Advanced" : "Intermediate"
-                  } badge.`}
-                </Text>
+                <div className="d-flex flex-column">
+                  <Text py={3}>
+                    {`Wadzoo requires access to at least $${
+                      service === "verifyAdvanced" ? "500,000" : "300,000"
+                    } for an ${
+                      service === "verifyAdvanced" ? "Advanced" : "Intermediate"
+                    } badge.`}
+                  </Text>
+                </div>
               )}
+              <Text
+                onClick={() => {
+                  setCompletedSteps((prevState) => [...prevState, 1]);
+                  setRequest((prevState) => ({
+                    ...prevState,
+                    combinedBalances: "requestCall",
+                  }));
+                  completedSteps.includes(2) ? setStep(3) : setStep(2);
+                }}
+                style={{ cursor: "pointer" }}
+                underline
+                color="secondary.800"
+              >
+                Problem? You can request a call to verify your funds instead.
+              </Text>
               {balanceisApproved(accounts) && (
                 <div className="d-flex pt-2">
                   <Button
@@ -222,7 +239,7 @@ const Checkout = ({ setNavbarTransparent }) => {
         )}
         {!hideLink && (
           <div
-            className="d-flex justify-content-start align-items-center pt-5"
+            className="d-flex justify-content-start align-items-center py-3"
             style={{ width: "100%" }}
           >
             <PlaidLink
@@ -233,6 +250,22 @@ const Checkout = ({ setNavbarTransparent }) => {
             />
           </div>
         )}
+        <Text
+          pt={3}
+          onClick={() => {
+            setCompletedSteps((prevState) => [...prevState, 1]);
+            setRequest((prevState) => ({
+              ...prevState,
+              combinedBalances: "requestCall",
+            }));
+            completedSteps.includes(2) ? setStep(3) : setStep(2);
+          }}
+          style={{ cursor: "pointer" }}
+          underline
+          color="secondary.800"
+        >
+          Problem? You can request a call to verify your funds instead.
+        </Text>
       </div>
     );
   };
@@ -531,6 +564,8 @@ const Checkout = ({ setNavbarTransparent }) => {
         lastName: user.lastName,
         status: "pendingPayment",
         created: new Date(),
+        badge: service === "verifyIntermediate" ? "intermediate" : "advanced",
+        currentBadge: user.badge ? user.badge : "beginner",
       };
       createVerificationRequest(newRequest, selectedFiles)
         .then(() => {
@@ -586,6 +621,8 @@ const Checkout = ({ setNavbarTransparent }) => {
               <Text px={3} fontSize={14} color="muted.400">
                 {!completedSteps.includes(1)
                   ? "You must submit your funding verification before you can go further."
+                  : request.combinedBalances === "requestCall"
+                  ? "Our verification team will reach out shortly to schedule a call."
                   : `Total account balance: ${formatter.format(
                       Number(
                         accounts
@@ -619,7 +656,7 @@ const Checkout = ({ setNavbarTransparent }) => {
                 {!completedSteps.includes(2)
                   ? "You must submit proof of deals (or request a call) before you can continue."
                   : request.deals === "requestCall"
-                  ? "Our verification team will reach out shortly."
+                  ? "Our verification team will reach out shortly to schedule a call."
                   : `You have uploaded ${selectedFiles.length} file${
                       selectedFiles.length === 1 ? "" : "s"
                     }`}

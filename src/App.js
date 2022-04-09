@@ -194,7 +194,7 @@ function App() {
                 />
               }
             >
-              <Route index element={<AnalyticsView />} />
+              <Route index element={<VerificationRequestsView />} />
               <Route path="analytics" element={<AnalyticsView />} />
               <Route
                 path="verifications"

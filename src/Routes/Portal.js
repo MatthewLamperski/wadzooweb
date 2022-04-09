@@ -4,7 +4,8 @@ import { AppContext } from "../AppContext";
 import { Col, Container, Row } from "react-bootstrap";
 import { FaPlusCircle, FaTasks, FaUserShield } from "react-icons/all";
 import { FaChevronRight } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import AppIcon from "../Assets/AppIcon.png";
 import "./Portal.css";
 
 const Portal = ({ setNavbarTransparent }) => {
@@ -183,7 +184,27 @@ const Portal = ({ setNavbarTransparent }) => {
         </div>
       );
     } else {
-      return <Text>There is nothing to see here yet... Check back later!</Text>;
+      return (
+        <div className="d-flex flex-column justify-content-center align-items-start p-5">
+          <img
+            src={AppIcon}
+            height={75}
+            style={{ marginBottom: 20 }}
+            alt="App Icon"
+          />
+          <Text fontWeight={300} color="secondary.800" fontSize={30}>
+            Coming soon...
+          </Text>
+          <Text py={1} color="muted.500">
+            Wadzoo Portal has not been set up for users yet. Check back soon!
+          </Text>
+          <Link style={{ textDecoration: "none" }} to="/download">
+            <Text fontSize={18} underline color="primary.600">
+              Download Wadzoo here!
+            </Text>
+          </Link>
+        </div>
+      );
     }
   };
   return (

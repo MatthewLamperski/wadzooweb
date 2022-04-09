@@ -332,6 +332,36 @@ export const createVerificationRequest = (request, files) => {
   });
 };
 
+export const approveVerificationRequest = ({ uid, badge, docID }) => {
+  return new Promise((resolve, reject) => {
+    updateDoc(doc(db, `/users/${uid}`), { badge })
+      .then(() => {
+        updateDoc(doc(db, `/verification/${docID}`), { status: "approved" })
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => reject(err));
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const denyVerificationRequest = ({ uid, docID, currentBadge }) => {
+  return new Promise((resolve, reject) => {
+    updateDoc(doc(db, `/users/${uid}`), {
+      badge: currentBadge === undefined ? "beginner" : currentBadge,
+    })
+      .then(() => {
+        updateDoc(doc(db, `/verification/${docID}`), { status: "denied" })
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => reject(err));
+      })
+      .catch((err) => reject(err));
+  });
+};
+
 export const createStripePaymentSession = (uid, service) => {
   return new Promise((resolve, reject) => {
     getDoc(doc(db, `/products/${service}`))
