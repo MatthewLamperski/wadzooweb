@@ -1,0 +1,22 @@
+ol.upper-alpha {
+    list-style-type: upper-alpha;
+}
+
+ol.lower-roman {
+    list-style-type: lower-roman;
+    font-family: Avenir;
+}
+
+li {
+    font-family: Avenir-Heavy;
+    font-size: 14px;
+}
+
+h4 {
+    font-family: Avenir-Black;
+    color: #004150;
+}
+
+ul {
+    list-style-type: none;
+}

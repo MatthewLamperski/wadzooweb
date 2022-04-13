@@ -31,7 +31,14 @@ const LinkNotFound = ({ setNavbarTransparent }) => {
         }}
       >
         <Row style={{ width: "100%" }}>
-          <Col>
+          <Col
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
             <h1
               style={{
                 color: theme.colors.secondary["800"],
