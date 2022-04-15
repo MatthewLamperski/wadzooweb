@@ -183,6 +183,289 @@ exports.iaphubSubscriptionNoty = functions.https.onRequest(
           process.env.PLAID_ENV
       );
       if (request.method === "POST") {
+      // Update user's activeProducts if applicable
+        if (request.body.type === "subscription_expire") {
+          const uid = request.body.data.userId;
+          admin
+              .firestore()
+              .doc(`users/${uid}`)
+              .update({activeProducts: []})
+              .then(() => {
+                functions.logger.log(
+                    `Updated activeProducts for user ${uid} to none`
+                );
+                // Update user's subscription if app is not quit
+                admin
+                    .firestore()
+                    .doc(`users/${uid}`)
+                    .get()
+                    .then((userDoc) => {
+                      const userData = userDoc.data();
+                      if ("notificationToken" in userData) {
+                        const payload = {
+                          notification: {
+                            title: "Subscription Expired",
+                            body: "Your Wadzoo subscription just expired!",
+                          },
+                          data: {
+                            type: "info",
+                            action: "subscription_expire",
+                          },
+                        };
+                        const token = userData.notificationToken.token;
+                        admin
+                            .messaging()
+                            .sendToDevice(token, payload)
+                            .then(() =>
+                            // eslint-disable-next-line max-len
+                              functions.logger.log(
+                                  `Successfully sent ${uid} background message`
+                              )
+                            );
+                      } else {
+                        functions.logger.log(
+                            `No notification token found uid ${uid}`
+                        );
+                      }
+                    })
+                    .catch((err) =>
+                      functions.logger.log("Error expiring sub in-app")
+                    );
+              })
+              .catch((err) =>
+                functions.logger.log(
+                    "Error updating activeProducts on expiration" + err
+                )
+              );
+        } else if (request.body.type === "purchase") {
+        // Update purchases
+          admin
+              .firestore()
+              .doc("app/subscriptions")
+              .update({
+                totalRevenue: admin.firestore.FieldValue.increment(
+                    request.body.data.price
+                ),
+                totalPurchases: admin.firestore.FieldValue.increment(1),
+              })
+              .then(() => functions.logger.log("Updated app/subscriptions"))
+              .catch((err) =>
+                functions.logger.log("Error updating app/subscriptions", err)
+              );
+          admin
+              .firestore()
+              .collection("app/subscriptions/purchases")
+              .add(request.body.data)
+              .catch((err) =>
+                functions.logger.log("Error adding purchase to app/subs", err)
+              );
+          const uid = request.body.data.userId;
+          // A user made a new purchase, check if it was with a promo code
+          admin
+              .firestore()
+              .doc(`users/${uid}`)
+              .get()
+              .then((docSnapshot) => {
+                const userData = docSnapshot.data();
+                if ("promoCode" in userData) {
+                  if (
+                    userData.promoCode !== null &&
+                typeof userData.promoCode === "string"
+                  ) {
+                    // User purchased with a promo code,
+                    // add purchase under promoCodes
+                    const promoCode = userData.promoCode;
+                    admin
+                        .firestore()
+                        .collection("promoCodes")
+                        .where("promoCode", "==", promoCode)
+                        .get()
+                        .then((promoDocsSnapshot) => {
+                          if (!promoDocsSnapshot.empty) {
+                            const promoDoc = promoDocsSnapshot.docs[0];
+                            // Update doc with new purchase
+                            promoDoc.ref
+                                .collection("purchases")
+                                .add(request.body.data)
+                                .then(() =>
+                                  functions.logger.log(
+                                      "added purchase doc to promoCode"
+                                  )
+                                )
+                                .catch((err) =>
+                                  functions.logger.log(
+                                      "Couldn't add new purchase doc",
+                                      err
+                                  )
+                                );
+                            // Update totalPurchases
+                            if ("totalPurchases" in promoDoc.data()) {
+                              promoDoc.ref
+                                  .update({
+                                    totalPurchases:
+                              admin.firestore.FieldValue.increment(1),
+                                    // eslint-disable-next-line max-len
+                                    totalRevenue: admin.firestore.FieldValue.increment(
+                                        request.body.data.price
+                                    ),
+                                  })
+                                  .catch((err) =>
+                                    functions.logger.log(
+                                        "Error incrementing totalPurchases",
+                                        err
+                                    )
+                                  );
+                            } else {
+                              promoDoc.ref
+                                  .update({
+                                    totalPurchases: 1,
+                                    totalRevenue: request.body.data.price,
+                                  })
+                                  .catch((err) =>
+                                    functions.logger.log(
+                                        "Error incrementing totalPurchases",
+                                        err
+                                    )
+                                  );
+                            }
+                          }
+                        })
+                        .catch((err) =>
+                          functions.logger.log(
+                              "Couldn't get doc with matching promoCode"
+                          )
+                        );
+                  }
+                }
+              })
+              .catch((err) =>
+              // eslint-disable-next-line max-len
+                functions.logger.log("Couldn't get user doc to see if promo used")
+              );
+        } else if (request.body.type === "subscription_renewal") {
+        // Update purchases
+          admin
+              .firestore()
+              .doc("app/subscriptions")
+              .update({
+                totalRevenue: admin.firestore.FieldValue.increment(
+                    request.body.data.price
+                ),
+                totalPurchases: admin.firestore.FieldValue.increment(1),
+              })
+              .then(() => {
+                functions.logger.log("Updated app/subscriptions");
+                admin
+                    .firestore()
+                    .collection("app/subscriptions/purchases")
+                // eslint-disable-next-line max-len
+                    .where("id", "==", request.body.data.originalPurchase)
+                    .get()
+                    .then((querySnapshot) => {
+                      if (!querySnapshot.empty) {
+                        const purchaseDoc = querySnapshot.docs[0];
+                        purchaseDoc.ref
+                            .collection("renewals")
+                            .add(request.body.data)
+                            .catch((err) =>
+                            // eslint-disable-next-line max-len
+                              functions.logger.log("Error adding renewal doc", err)
+                            );
+                      }
+                    });
+              })
+              .catch((err) =>
+                functions.logger.log("Error updating app/subscriptions", err)
+              );
+          const uid = request.body.data.userId;
+          // A user renewed, check if it was purchased with a promo
+          admin
+              .firestore()
+              .doc(`users/${uid}`)
+              .get()
+              .then((docSnapshot) => {
+                const userData = docSnapshot.data();
+                if ("promoCode" in userData) {
+                  if (
+                    userData.promoCode !== null &&
+                typeof userData.promoCode === "string"
+                  ) {
+                    // User purchased with a promo code,
+                    // add renewal under promoCodes
+                    const promoCode = userData.promoCode;
+                    admin
+                        .firestore()
+                        .collection("promoCodes")
+                        .where("promoCode", "==", promoCode)
+                        .get()
+                        .then((promoDocsSnapshot) => {
+                          if (!promoDocsSnapshot.empty) {
+                            const promoDoc = promoDocsSnapshot.docs[0];
+                            // Update doc with new purchase
+                            promoDoc.ref
+                                .collection("purchases")
+                            // eslint-disable-next-line max-len
+                                .where("id", "==", request.body.data.originalPurchase)
+                                .get()
+                                .then((querySnapshot) => {
+                                  if (!querySnapshot.empty) {
+                                    const purchaseDoc = querySnapshot.docs[0];
+                                    purchaseDoc.ref
+                                        .collection("renewals")
+                                        .add(request.body.data)
+                                        .catch((err) =>
+                                          functions.logger.log(
+                                              "Error adding renewal doc",
+                                              err
+                                          )
+                                        );
+                                  }
+                                });
+                            // Update totalPurchases
+                            if ("totalPurchases" in promoDoc.data()) {
+                              promoDoc.ref
+                                  .update({
+                                    totalPurchases:
+                              admin.firestore.FieldValue.increment(1),
+                                    // eslint-disable-next-line max-len
+                                    totalRevenue: admin.firestore.FieldValue.increment(
+                                        request.body.data.price
+                                    ),
+                                  })
+                                  .catch((err) =>
+                                    functions.logger.log(
+                                        "Error incrementing totalPurchases",
+                                        err
+                                    )
+                                  );
+                            } else {
+                              promoDoc.ref
+                                  .update({
+                                    totalPurchases: 1,
+                                    totalRevenue: request.body.data.price,
+                                  })
+                                  .catch((err) =>
+                                    functions.logger.log(
+                                        "Error incrementing totalPurchases",
+                                        err
+                                    )
+                                  );
+                            }
+                          }
+                        })
+                        .catch((err) =>
+                          functions.logger.log(
+                              "Couldn't get doc with matching promoCode"
+                          )
+                        );
+                  }
+                }
+              })
+              .catch((err) =>
+              // eslint-disable-next-line max-len
+                functions.logger.log("Couldn't get user doc to see if promo used")
+              );
+        }
         admin
             .firestore()
             .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
@@ -420,3 +703,37 @@ exports.sendMessageNotification = functions.firestore
             });
       }
     });
+
+exports.testSendDataMessage = functions.https.onRequest((req, res) => {
+  cors(req, res, () => {
+    if (req.method === "POST") {
+      admin
+          .firestore()
+          .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
+          .get()
+          .then((userDoc) => {
+            const userData = userDoc.data();
+            if ("notificationToken" in userData) {
+              const payload = req.body.payload;
+              const token = userData.notificationToken.token;
+              admin
+                  .messaging()
+                  .sendToDevice(token, payload, req.body.options)
+                  .then(() =>
+                  // eslint-disable-next-line max-len
+                    res.json({
+                      token,
+                      payload,
+                    })
+                  )
+                  .catch((err) => res.json(err));
+            } else {
+              res.json({message: "No notification token found"});
+            }
+          })
+          .catch((err) => res.json(err));
+    } else {
+      res.json({error: "Access Forbidden"});
+    }
+  });
+});
