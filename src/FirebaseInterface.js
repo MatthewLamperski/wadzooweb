@@ -265,6 +265,16 @@ export const getListing = (docID) => {
   });
 };
 
+export const getSubscriptions = () => {
+  return new Promise((resolve, reject) => {
+    getDoc(doc(db, "/app/subscriptions"))
+      .then((snapshot) => {
+        resolve({ docID: snapshot.id, ...snapshot.data() });
+      })
+      .catch((err) => reject(err));
+  });
+};
+
 export const getVerificationRequests = (lastVisible) => {
   return new Promise((resolve, reject) => {
     let q = lastVisible
