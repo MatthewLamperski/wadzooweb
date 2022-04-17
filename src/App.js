@@ -34,6 +34,7 @@ import AdminDashboard from "./Views/AdminDashboard/AdminDashboard";
 import AnalyticsView from "./Views/AdminDashboard/AnalyticsView";
 import VerificationRequestsView from "./Views/AdminDashboard/VerificationRequestsView";
 import WhitelistView from "./Views/AdminDashboard/WhitelistView";
+import TermsOfUse from "./Routes/TermsOfUse";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -137,6 +138,12 @@ function App() {
               path="/privacypolicy"
               element={
                 <PrivacyPolicy setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
+              path="/tou"
+              element={
+                <TermsOfUse setNavbarTransparent={setNavbarTransparent} />
               }
             />
             <Route
