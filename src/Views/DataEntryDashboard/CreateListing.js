@@ -185,7 +185,9 @@ const CreateListing = ({ setNavbarTransparent }) => {
             delete tmpListing.listerObj;
             const newListing = {
               ...tmpListing,
+              after: true,
               environment: "production",
+              fullAddress: `${listing.address.trim()}, ${listing.city.trim()} ${listing.state.trim()} ${listing.zipCode.trim()}`,
               geohash,
               lat,
               lng,
@@ -437,7 +439,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
   };
   const theme = useTheme();
   if (user && user.role) {
-    if (user.role === "dataEntry" || user.role === "admin") {
+    if (user.role.includes("dataEntry") || user.role.includes("admin")) {
       return (
         <PresenceTransition
           visible

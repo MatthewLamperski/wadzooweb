@@ -353,29 +353,15 @@ exports.iaphubSubscriptionNoty = functions.https.onRequest(
                 ),
                 totalPurchases: admin.firestore.FieldValue.increment(1),
               })
-              .then(() => {
-                functions.logger.log("Updated app/subscriptions");
-                admin
-                    .firestore()
-                    .collection("app/subscriptions/purchases")
-                // eslint-disable-next-line max-len
-                    .where("id", "==", request.body.data.originalPurchase)
-                    .get()
-                    .then((querySnapshot) => {
-                      if (!querySnapshot.empty) {
-                        const purchaseDoc = querySnapshot.docs[0];
-                        purchaseDoc.ref
-                            .collection("renewals")
-                            .add(request.body.data)
-                            .catch((err) =>
-                            // eslint-disable-next-line max-len
-                              functions.logger.log("Error adding renewal doc", err)
-                            );
-                      }
-                    });
-              })
               .catch((err) =>
                 functions.logger.log("Error updating app/subscriptions", err)
+              );
+          admin
+              .firestore()
+              .collection("app/subscriptions/renewals")
+              .add(request.body.data)
+              .catch((err) =>
+                functions.logger.log("Error adding renewal to app/rens", err)
               );
           const uid = request.body.data.userId;
           // A user renewed, check if it was purchased with a promo
@@ -403,24 +389,14 @@ exports.iaphubSubscriptionNoty = functions.https.onRequest(
                             const promoDoc = promoDocsSnapshot.docs[0];
                             // Update doc with new purchase
                             promoDoc.ref
-                                .collection("purchases")
-                            // eslint-disable-next-line max-len
-                                .where("id", "==", request.body.data.originalPurchase)
-                                .get()
-                                .then((querySnapshot) => {
-                                  if (!querySnapshot.empty) {
-                                    const purchaseDoc = querySnapshot.docs[0];
-                                    purchaseDoc.ref
-                                        .collection("renewals")
-                                        .add(request.body.data)
-                                        .catch((err) =>
-                                          functions.logger.log(
-                                              "Error adding renewal doc",
-                                              err
-                                          )
-                                        );
-                                  }
-                                });
+                                .collection("renewals")
+                                .add(request.body.data)
+                                .catch((err) =>
+                                  functions.logger.log(
+                                      "Couldn't add new renewal doc",
+                                      err
+                                  )
+                                );
                             // Update totalPurchases
                             if ("totalPurchases" in promoDoc.data()) {
                               promoDoc.ref

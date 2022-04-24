@@ -2,7 +2,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { PresenceTransition, Pressable, Text, useTheme } from "native-base";
 import { AppContext } from "../AppContext";
 import { Col, Container, Row } from "react-bootstrap";
-import { FaPlusCircle, FaTasks, FaUserShield } from "react-icons/all";
+import {
+  FaPlusCircle,
+  FaTasks,
+  FaUserShield,
+  IoGitNetwork,
+} from "react-icons/all";
 import { FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import AppIcon from "../Assets/AppIcon.png";
@@ -22,6 +27,7 @@ const Portal = ({ setNavbarTransparent }) => {
       document.getElementsByClassName("navbar").item(0).clientHeight
     );
   }, []);
+
   const theme = useTheme();
   const renderDashboard = () => {
     if (user && user.role) {
@@ -66,8 +72,8 @@ const Portal = ({ setNavbarTransparent }) => {
               className="justify-content-center justify-content-md-start"
               style={styles.rowStyle}
             >
-              {user.role === "admin" && (
-                <Col className="my-3" xs={10} md={6}>
+              {user.role.includes("admin") && (
+                <Col xs={10} md={6}>
                   <div
                     style={{ borderRadius: 8 }}
                     className="animate-link-shadow"
@@ -106,79 +112,129 @@ const Portal = ({ setNavbarTransparent }) => {
                   </div>
                 </Col>
               )}
-              <Col xs={10} md={6}>
-                <div
-                  style={{ borderRadius: 8 }}
-                  className="animate-link-shadow"
-                >
-                  <Pressable
-                    style={styles.actionContainer}
-                    onPress={() => navigate("/createListing")}
+              {(user.role.includes("affiliate") ||
+                user.role.includes("admin")) && (
+                <Col className="my-3" xs={10} md={6}>
+                  <div
+                    style={{ borderRadius: 8 }}
+                    className="animate-link-shadow"
                   >
-                    <div style={styles.titleContainer}>
-                      <FaPlusCircle
-                        style={styles.iconStyle}
-                        color={theme.colors.secondary["800"]}
-                      />
-                      <Text
-                        fontSize={18}
-                        fontWeight={300}
-                        color="secondary.800"
-                      >
-                        Create Listings
-                      </Text>
-                    </div>
-                    <div style={styles.contentContainer}>
-                      <Text color="muted.400">
-                        Here you can add new listings and create new associated
-                        user accounts.
-                      </Text>
-                    </div>
                     <Pressable
-                      style={styles.buttonContainer}
-                      onPress={() => navigate("/createListing")}
+                      style={styles.actionContainer}
+                      onPress={() => navigate("/affiliate")}
                     >
-                      <Text fontSize={18}>Go</Text>
-                      <FaChevronRight color={theme.colors.secondary["800"]} />
-                    </Pressable>
-                  </Pressable>
-                </div>
-              </Col>
-              <Col className="my-3" xs={10} md={6}>
-                <div
-                  style={{ borderRadius: 8 }}
-                  className="animate-link-shadow"
-                >
-                  <Pressable
-                    style={styles.actionContainer}
-                    onPress={() => navigate("/manageListings")}
-                  >
-                    <div style={styles.titleContainer}>
-                      <FaTasks
-                        style={styles.iconStyle}
-                        color={theme.colors.secondary["800"]}
-                      />
-                      <Text
-                        fontSize={18}
-                        fontWeight={300}
-                        color="secondary.800"
+                      <div style={styles.titleContainer}>
+                        <IoGitNetwork
+                          style={styles.iconStyle}
+                          color={theme.colors.secondary["800"]}
+                        />
+                        <Text
+                          fontSize={18}
+                          fontWeight={300}
+                          color="secondary.800"
+                        >
+                          Affiliate Dashboard
+                        </Text>
+                      </div>
+                      <div style={styles.contentContainer}>
+                        <Text color="muted.400">
+                          Here you can view your affiliate analytics, and
+                          request payment.
+                        </Text>
+                      </div>
+                      <Pressable
+                        style={styles.buttonContainer}
+                        onPress={() => navigate("/affiliate")}
                       >
-                        Manage Listings
-                      </Text>
-                    </div>
-                    <div style={styles.contentContainer}>
-                      <Text color="muted.400">
-                        Here you can delete old listings, edit and change
-                        listing information.
-                      </Text>
-                    </div>
-                    <Pressable style={styles.buttonContainer}>
-                      <Text fontSize={18}>Go</Text>
-                      <FaChevronRight color={theme.colors.secondary["800"]} />
+                        <Text fontSize={18}>Go</Text>
+                        <FaChevronRight color={theme.colors.secondary["800"]} />
+                      </Pressable>
                     </Pressable>
-                  </Pressable>
-                </div>
-              </Col>
+                  </div>
+                </Col>
+              )}
+              {(user.role.includes("dataEntry") ||
+                user.role.includes("admin")) && (
+                <>
+                  <Col xs={10} md={6}>
+                    <div
+                      style={{ borderRadius: 8 }}
+                      className="animate-link-shadow"
+                    >
+                      <Pressable
+                        style={styles.actionContainer}
+                        onPress={() => navigate("/createListing")}
+                      >
+                        <div style={styles.titleContainer}>
+                          <FaPlusCircle
+                            style={styles.iconStyle}
+                            color={theme.colors.secondary["800"]}
+                          />
+                          <Text
+                            fontSize={18}
+                            fontWeight={300}
+                            color="secondary.800"
+                          >
+                            Create Listings
+                          </Text>
+                        </div>
+                        <div style={styles.contentContainer}>
+                          <Text color="muted.400">
+                            Here you can add new listings and create new
+                            associated user accounts.
+                          </Text>
+                        </div>
+                        <Pressable
+                          style={styles.buttonContainer}
+                          onPress={() => navigate("/createListing")}
+                        >
+                          <Text fontSize={18}>Go</Text>
+                          <FaChevronRight
+                            color={theme.colors.secondary["800"]}
+                          />
+                        </Pressable>
+                      </Pressable>
+                    </div>
+                  </Col>
+                  <Col className="my-3" xs={10} md={6}>
+                    <div
+                      style={{ borderRadius: 8 }}
+                      className="animate-link-shadow"
+                    >
+                      <Pressable
+                        style={styles.actionContainer}
+                        onPress={() => navigate("/manageListings")}
+                      >
+                        <div style={styles.titleContainer}>
+                          <FaTasks
+                            style={styles.iconStyle}
+                            color={theme.colors.secondary["800"]}
+                          />
+                          <Text
+                            fontSize={18}
+                            fontWeight={300}
+                            color="secondary.800"
+                          >
+                            Manage Listings
+                          </Text>
+                        </div>
+                        <div style={styles.contentContainer}>
+                          <Text color="muted.400">
+                            Here you can delete old listings, edit and change
+                            listing information.
+                          </Text>
+                        </div>
+                        <Pressable style={styles.buttonContainer}>
+                          <Text fontSize={18}>Go</Text>
+                          <FaChevronRight
+                            color={theme.colors.secondary["800"]}
+                          />
+                        </Pressable>
+                      </Pressable>
+                    </div>
+                  </Col>
+                </>
+              )}
             </Row>
           </Container>
         </div>
@@ -234,6 +290,7 @@ const styles = {
   rowStyle: {
     alignItems: "center",
     display: "flex",
+    width: "100%",
   },
   iconStyle: {
     margin: 10,

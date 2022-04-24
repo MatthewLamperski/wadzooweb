@@ -17,7 +17,7 @@ import {
   FaChartLine,
   FaChevronLeft,
   FaDesktop,
-  FaUserCheck,
+  IoGitNetwork,
 } from "react-icons/all";
 import { FaChevronRight } from "react-icons/fa";
 import LogoWhite from "../../Assets/LogoWhite.png";
@@ -35,7 +35,7 @@ const AdminDashboard = ({ setNavbarTransparent, setNavbarHidden }) => {
     setNavbarHidden(true);
   }, []);
   if (user && user.role) {
-    if (user.role === "admin") {
+    if (user.role.includes("admin")) {
       return (
         <div
           style={{
@@ -97,10 +97,10 @@ const AdminDashboard = ({ setNavbarTransparent, setNavbarHidden }) => {
 
                   <MenuItem
                     onClick={() => setCollapseSidebar(true)}
-                    icon={<FaUserCheck />}
+                    icon={<IoGitNetwork />}
                   >
-                    Whitelist
-                    <Link to="whitelist" />
+                    Affiliates
+                    <Link to="affiliates" />
                   </MenuItem>
                   <hr />
                   <MenuItem

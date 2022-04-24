@@ -143,6 +143,8 @@ const LandingPage = ({ setNavbarTransparent }) => {
               <div style={{ display: "flex", px: "auto" }}>
                 <Button
                   size="sm"
+                  endIcon={<FaChevronDown size={12} color="white" />}
+                  _text={{ color: "white", fontSize: 14, fontWeight: 300 }}
                   style={{
                     borderRadius: 50,
                     paddingHorizontal: 20,
@@ -151,12 +153,41 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   }}
                   onPress={() => scrollToBody()}
                 >
-                  <HStack alignItems="center" space={2}>
-                    <Text fontWeight={300} button>
-                      SEE MORE
-                    </Text>
-                    <FaChevronDown size={12} color="white" />
-                  </HStack>
+                  SEE MORE
+                </Button>
+                <Button
+                  ml={2}
+                  my={3}
+                  variant="outline"
+                  _text={{ fontSize: 14, fontWeight: 300 }}
+                  style={{
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    paddingHorizontal: 20,
+                  }}
+                  size="sm"
+                  rounded="3xl"
+                  endIcon={
+                    <FaChevronRight
+                      size={12}
+                      color={theme.colors.primary["500"]}
+                    />
+                  }
+                  onPress={() => {
+                    if (deviceType() === "iOS") {
+                      window.open(
+                        "https://apps.apple.com/us/app/wadzoo/id1605839076"
+                      );
+                    } else if (deviceType() === "android") {
+                      window.open(
+                        "https://play.google.com/store/apps/details?id=com.wadzoo"
+                      );
+                    } else {
+                      scrollToBody();
+                    }
+                  }}
+                >
+                  PRE-ORDER
                 </Button>
               </div>
             </Container>

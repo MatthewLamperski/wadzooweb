@@ -33,8 +33,9 @@ import Checkout from "./Routes/Checkout";
 import AdminDashboard from "./Views/AdminDashboard/AdminDashboard";
 import AnalyticsView from "./Views/AdminDashboard/AnalyticsView";
 import VerificationRequestsView from "./Views/AdminDashboard/VerificationRequestsView";
-import WhitelistView from "./Views/AdminDashboard/WhitelistView";
 import TermsOfUse from "./Routes/TermsOfUse";
+import AffiliatesView from "./Views/AdminDashboard/AffiliatesView";
+import AffiliatesDashboard from "./Views/AffiliatesDashboard/AffiliatesDashboard";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -193,6 +194,14 @@ function App() {
               }
             />
             <Route
+              path="/affiliate"
+              element={
+                <AffiliatesDashboard
+                  setNavbarTransparent={setNavbarTransparent}
+                />
+              }
+            />
+            <Route
               path="admin"
               element={
                 <AdminDashboard
@@ -207,7 +216,7 @@ function App() {
                 path="verifications"
                 element={<VerificationRequestsView />}
               />
-              <Route path="whitelist" element={<WhitelistView />} />
+              <Route path="affiliates" element={<AffiliatesView />} />
             </Route>
           </Routes>
           <Footer />

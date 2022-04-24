@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
 import {
+  AlertDialog,
   Button,
   PresenceTransition,
   Pressable,
@@ -12,11 +13,12 @@ import {
 import { Container } from "react-bootstrap";
 import AccessDenied from "./AccessDenied";
 import LoadingScreen from "./LoadingScreen";
-import { getListing } from "../FirebaseInterface";
+import { deleteListing, getListing } from "../FirebaseInterface";
 import { Slide } from "react-slideshow-image";
 import "react-slideshow-image/dist/styles.css";
 import "./ListingView.css";
 import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from "react-icons/all";
+import { toast } from "react-toastify";
 
 const ListingView = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
@@ -50,9 +52,12 @@ const ListingView = ({ setNavbarTransparent }) => {
   const { user, setError } = useContext(AppContext);
   const sliderRef = useRef(null);
   const theme = useTheme();
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const cancelRef = useRef(null);
+  const deleteRef = useRef(null);
   const [editing, setEditing] = useState();
   if (user && user.role) {
-    if (user.role === "dataEntry" || user.role === "admin") {
+    if (user.role.includes("dataEntry") || user.role.includes("admin")) {
       return (
         <PresenceTransition
           visible
@@ -65,6 +70,7 @@ const ListingView = ({ setNavbarTransparent }) => {
               display: "flex",
               flexDirection: "column",
               paddingTop: navbarHeight,
+              backgroundColor: "#EDf0F3",
             }}
           >
             <Container
@@ -81,7 +87,7 @@ const ListingView = ({ setNavbarTransparent }) => {
               <div>
                 {listing ? (
                   <div className="d-flex flex-column justify-content-center">
-                    {listing.images && listing.images.length > 0 && (
+                    {listing.images && typeof listing.images === "object" && (
                       <div className="d-flex flex-row justify-content-between align-items-center p-2">
                         <Pressable
                           p={3}
@@ -141,7 +147,7 @@ const ListingView = ({ setNavbarTransparent }) => {
                       </div>
                     )}
                     <Text color="secondary.800" fontWeight={300} fontSize={24}>
-                      {listing.address}, {listing.city} {listing.state}
+                      {listing.fullAddress}
                     </Text>
                     {listing.images && listing.images.length > 0 && <div />}
                     <Text fontSize={20} color="muted.400">
@@ -154,13 +160,15 @@ const ListingView = ({ setNavbarTransparent }) => {
                       {listing.images.length} image
                       {listing.images.length === 1 ? "" : "s"}
                     </Text>
-                    <Text>Seller: {listing.lister}</Text>
+                    <Text>Seller: {listing.email}</Text>
                     <div
                       style={{
                         position: "absolute",
                         top: 0,
                         right: 0,
                         padding: 10,
+                        display: "flex",
+                        flexDirection: "row",
                       }}
                     >
                       <Button
@@ -173,6 +181,14 @@ const ListingView = ({ setNavbarTransparent }) => {
                       >
                         Edit
                       </Button>
+                      <Button
+                        mx={3}
+                        variant="subtle"
+                        colorScheme="red"
+                        onPress={() => setOpenDeleteDialog(true)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -181,6 +197,61 @@ const ListingView = ({ setNavbarTransparent }) => {
               </div>
             </Container>
           </div>
+          <AlertDialog
+            leastDestructiveRef={cancelRef}
+            isOpen={openDeleteDialog}
+            onClose={() => setOpenDeleteDialog(false)}
+          >
+            <AlertDialog.Content bg="white">
+              <AlertDialog.CloseButton />
+              <AlertDialog.Header>
+                <Text>Delete Property</Text>
+              </AlertDialog.Header>
+              <AlertDialog.Body color="muted.500">
+                <Text color="muted.500">
+                  This will remove all data relating to this property. This
+                  action is irreversible
+                </Text>
+              </AlertDialog.Body>
+              <AlertDialog.Footer bg="muted.200">
+                <Button.Group space={2}>
+                  <Button
+                    variant="unstyled"
+                    colorScheme="coolGray"
+                    onPress={() => setOpenDeleteDialog(false)}
+                    ref={cancelRef}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    colorScheme="error"
+                    bg="error.500"
+                    onPress={() => {
+                      deleteListing(docID)
+                        .then((res) => {
+                          console.log("deleted??", res);
+                          toast.success(
+                            `Property Deleted. ${
+                              !res && "There were no images to delete"
+                            }`
+                          );
+                          navigate("/manageListings");
+                        })
+                        .catch((err) =>
+                          setError({
+                            title: "Something went wrong.",
+                            message:
+                              "Here is the error, take a screenshot: " + err,
+                          })
+                        );
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Button.Group>
+              </AlertDialog.Footer>
+            </AlertDialog.Content>
+          </AlertDialog>
         </PresenceTransition>
       );
     } else {

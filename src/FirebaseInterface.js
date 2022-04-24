@@ -9,11 +9,13 @@ import {
   signOut,
 } from "firebase/auth";
 
-import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
+import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes,} from "firebase/storage";
 import {
   addDoc,
   arrayUnion,
   collection,
+  collectionGroup,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -265,6 +267,129 @@ export const getListing = (docID) => {
   });
 };
 
+export const isUserAlreadyAffiliate = (uid) => {
+  return new Promise((resolve, reject) => {
+    let q = query(collection(db, "promoCodes"), where("user", "==", uid));
+    getDocs(q)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        resolve(false);
+      });
+  });
+};
+
+export const doesPromoCodeExist = (code) => {
+  return new Promise((resolve) => {
+    let q = query(collection(db, "promoCodes"), where("promoCode", "==", code));
+    getDocs(q)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        resolve(false);
+      });
+  });
+};
+
+export const createAffiliateDoc = (affiliate) => {
+  return new Promise((resolve, reject) => {
+    addDoc(collection(db, "promoCodes"), affiliate)
+      .then(() => resolve())
+      .catch((err) => reject(err));
+  });
+};
+
+export const getAffiliateDoc = (uid) => {
+  return new Promise((resolve, reject) => {
+    let q = query(collection(db, "promoCodes"), where("user", "==", uid));
+    getDocs(q)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          reject("No doc found");
+        } else {
+          resolve({
+            docID: querySnapshot.docs[0].id,
+            ...querySnapshot.docs[0].data(),
+          });
+        }
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const getMonthAffiliateRenewals = () => {
+  return new Promise((resolve, reject) => {
+    let date = new Date();
+    let nowDate = date.toISOString();
+    let firstDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1
+    ).toISOString();
+    let renewals = query(
+      collectionGroup(db, "renewals"),
+      where("purchaseDate", ">", firstDate),
+      where("purchaseDate", "<", nowDate)
+    );
+    getDocs(renewals)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          resolve([]);
+        } else {
+          resolve(
+            querySnapshot.docs.map((purchaseDoc) => ({
+              docID: purchaseDoc.id,
+              ...purchaseDoc.data(),
+            }))
+          );
+        }
+      })
+      .catch((err) => reject(err));
+  });
+};
+export const getMonthAffiliatePurchases = (docID) => {
+  return new Promise((resolve, reject) => {
+    let date = new Date();
+    let nowDate = date.toISOString();
+    let firstDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1
+    ).toISOString();
+    let q = query(
+      collection(db, `promoCodes/${docID}/purchases`),
+      where("purchaseDate", ">", firstDate),
+      where("purchaseDate", "<", nowDate)
+    );
+    getDocs(q)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          resolve([]);
+        } else {
+          resolve(
+            querySnapshot.docs.map((purchaseDoc) => ({
+              docID: purchaseDoc.id,
+              ...purchaseDoc.data(),
+            }))
+          );
+        }
+      })
+      .catch((err) => reject(err));
+  });
+};
+
 export const getSubscriptions = () => {
   return new Promise((resolve, reject) => {
     getDoc(doc(db, "/app/subscriptions"))
@@ -404,6 +529,25 @@ export const createStripePaymentSession = (uid, service) => {
             });
           })
           .catch((err) => reject(err));
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const deleteListing = (docID) => {
+  return new Promise(async (resolve, reject) => {
+    //Delete images if exists
+    const storage = getStorage();
+    const folderRef = ref(storage, `listings/${docID}`);
+    let folderExisted = true;
+    try {
+      const result = await deleteObject(folderRef);
+    } catch (err) {
+      folderExisted = false;
+    }
+    deleteDoc(doc(db, `/listings/${docID}`))
+      .then(() => {
+        resolve(folderExisted);
       })
       .catch((err) => reject(err));
   });
@@ -566,6 +710,33 @@ export const createListing = (listing, images, docID) => {
           });
         });
     }
+  });
+};
+
+export const getTodaysProperties = () => {
+  let now = new Date();
+  let startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  return new Promise((resolve, reject) => {
+    let q = query(
+      collection(db, "listings"),
+      where("created", ">=", startOfToday),
+      where("created", "<=", now)
+    );
+    getDocs(q)
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          resolve([]);
+        } else {
+          resolve([
+            ...querySnapshot.docs.map((doc) => ({
+              docID: doc.id,
+              ...doc.data(),
+            })),
+          ]);
+        }
+      })
+      .catch((err) => reject(err));
   });
 };
 

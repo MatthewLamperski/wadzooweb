@@ -15,6 +15,7 @@ import { Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./ManageListings.css";
 import { FaArrowCircleRight } from "react-icons/all";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "../../Components/SearchBar";
 
 export const dateDiff = (postDate, long) => {
   let now = new Date();
@@ -103,7 +104,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
     <Tooltip {...props}>This number may take some time to update.</Tooltip>
   );
   if (user && user.role) {
-    if (user.role === "dataEntry" || user.role === "admin") {
+    if (user.role.includes("dataEntry") || user.role.includes("admin")) {
       return (
         <PresenceTransition
           visible
@@ -116,6 +117,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
               display: "flex",
               flexDirection: "column",
               paddingTop: navbarHeight,
+              backgroundColor: "#EDf0F3",
             }}
           >
             <Container className="py-5">
@@ -136,9 +138,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
                     </OverlayTrigger>
                   )}
                 </div>
-                <Text color="muted.400" fontWeight={300} fontSize={14}>
-                  Sorted by date (more options coming soon)
-                </Text>
+                <SearchBar index="listings" />
               </div>
               <div
                 className="p-3"
@@ -177,8 +177,7 @@ const ManageListings = ({ setNavbarTransparent }) => {
                             )}
                             <div className="d-flex flex-column align-items-start px-3">
                               <Text fontSize={16} color="secondary.800">
-                                {listing.address}, {listing.city}{" "}
-                                {listing.state}
+                                {listing.fullAddress}
                               </Text>
                               <Text
                                 fontSize={14}

@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import { AppContext } from "../AppContext";
 import { useNavigate } from "react-router-dom";
+import { FaHome } from "react-icons/all";
 
 const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
   const { FIRUser, user } = useContext(AppContext);
@@ -154,6 +155,84 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
                   </Text>
                 </div>
                 <Nav>
+                  <Nav.Link
+                    onClick={() => {
+                      setShow(false);
+                      navigate("/manageListings");
+                    }}
+                  >
+                    <div
+                      className="p-3"
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        boxShadow:
+                          "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FaHome
+                          color={theme.colors.secondary["800"]}
+                          size={22}
+                          className="mx-2"
+                        />
+                        <Text
+                          color="secondary.800"
+                          fontWeight={300}
+                          fontSize={20}
+                        >
+                          Manage Listings
+                        </Text>
+                      </div>
+                      <FaChevronRight
+                        color={theme.colors.secondary["800"]}
+                        size={22}
+                        className="mx-2"
+                      />
+                    </div>
+                  </Nav.Link>
+                  <Nav.Link
+                    onClick={() => {
+                      setShow(false);
+                      navigate("/createListing");
+                    }}
+                  >
+                    <div
+                      className="p-3"
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        boxShadow:
+                          "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FaHome
+                          color={theme.colors.secondary["800"]}
+                          size={22}
+                          className="mx-2"
+                        />
+                        <Text
+                          color="secondary.800"
+                          fontWeight={300}
+                          fontSize={20}
+                        >
+                          Create Listing
+                        </Text>
+                      </div>
+                      <FaChevronRight
+                        color={theme.colors.secondary["800"]}
+                        size={22}
+                        className="mx-2"
+                      />
+                    </div>
+                  </Nav.Link>
                   <Nav.Link
                     onClick={() => {
                       setShow(false);
