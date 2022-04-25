@@ -99,6 +99,7 @@ export const createUser = ({
         firstName,
         lastName,
         email,
+        displayName: `${firstName} ${lastName}`,
         ...(companyName ? { companyName } : {}),
         ...(phoneNumber ? { phoneNumber } : {}),
       }).then(() => {
@@ -109,6 +110,7 @@ export const createUser = ({
             password,
             firstName,
             lastName,
+            displayName: `${firstName} ${lastName}`,
             ...(companyName ? { companyName } : {}),
             ...(phoneNumber ? { phoneNumber } : {}),
           },
@@ -120,6 +122,7 @@ export const createUser = ({
           setDoc(doc(db, "users", newUserCredential.user.uid), {
             firstName,
             lastName,
+            displayName: `${firstName} ${lastName}`,
             email,
             since,
             ...(companyName ? { companyName } : {}),
@@ -144,6 +147,7 @@ export const createUser = ({
                       password,
                       firstName,
                       lastName,
+                      displayName: `${firstName} ${lastName}`,
                       since,
                       ...(companyName ? { companyName } : {}),
                       ...(phoneNumber ? { phoneNumber } : {}),
@@ -529,6 +533,24 @@ export const createStripePaymentSession = (uid, service) => {
             });
           })
           .catch((err) => reject(err));
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const deleteUser = (uid) => {
+  return new Promise(async (resolve, reject) => {
+    const storage = getStorage();
+    const folderRef = ref(storage, `profilePictures/${uid}`);
+    let picExisted = true;
+    try {
+      const result = await deleteObject(folderRef);
+    } catch (err) {
+      picExisted = false;
+    }
+    deleteDoc(doc(db, `/users/${uid}`))
+      .then(() => {
+        resolve(picExisted);
       })
       .catch((err) => reject(err));
   });

@@ -1,0 +1,216 @@
+import React, { useContext, useEffect, useRef, useState } from "react";
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Image,
+  Spinner,
+  Text,
+  useTheme,
+} from "native-base";
+import SearchBar from "../../Components/SearchBar";
+import {
+  deleteUser,
+  getProfilePicURL,
+  getUserDoc,
+} from "../../FirebaseInterface";
+import { AppContext } from "../../AppContext";
+import { FaUser } from "react-icons/fa";
+import { toast } from "react-toastify";
+
+const UsersView = () => {
+  const { setError } = useContext(AppContext);
+  const theme = useTheme();
+  const [selectedUID, setSelectedUID] = useState();
+  const [selectedUser, setSelectedUser] = useState();
+  const [photoURL, setPhotoURL] = useState();
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const cancelRef = useRef(null);
+  useEffect(() => {
+    if (selectedUID) {
+      getUserDoc(selectedUID)
+        .then((userDoc) => setSelectedUser(userDoc))
+        .catch((err) => {
+          setSelectedUser(null);
+          setError({
+            title: "Couldn't load user",
+            message: "Please try again",
+          });
+        });
+      getProfilePicURL(selectedUID)
+        .then((url) => setPhotoURL(url))
+        .catch((err) => {
+          setPhotoURL();
+          console.log(err);
+        });
+    }
+  }, [selectedUID]);
+  return (
+    <div style={styles.backgroundStyle} className="p-3">
+      <div className="p-3" style={styles.rowStyle}>
+        <Text color="secondary.800" fontWeight={300} fontSize={24}>
+          Manage Users
+        </Text>
+        <SearchBar setUserSelected={setSelectedUID} index="users" />
+      </div>
+      {selectedUID ? (
+        <div style={styles.containerStyle}>
+          {selectedUser === undefined ? (
+            <Spinner color="primary.500" />
+          ) : selectedUser === null ? (
+            <Text>No user</Text>
+          ) : (
+            <div
+              style={{ wordBreak: "break-word" }}
+              className="d-flex flex-grow-1 flex-column"
+            >
+              <Image
+                key={photoURL ? photoURL : "wadzoo.com"}
+                height={40}
+                alt="Profile"
+                width={40}
+                borderRadius={80}
+                borderWidth={1}
+                borderColor="primary.500"
+                source={{
+                  uri: photoURL ? photoURL : "wadzoo.com",
+                }}
+                fallbackElement={
+                  <Box
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 40,
+                      backgroundColor: theme.colors.muted["500"],
+                      borderWidth: 1,
+                      borderColor: theme.colors.primary["500"],
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FaUser color={theme.colors.lightText} size={10} />
+                  </Box>
+                }
+              />
+              <Text>First Name: {selectedUser.firstName}</Text>
+              <Text>Last Name: {selectedUser.lastName}</Text>
+              <Text>Email: {selectedUser.email}</Text>
+              <Text>Display Name: {selectedUser.displayName}</Text>
+              {selectedUser.location && (
+                <Text>
+                  Location: {selectedUser.location.locality}{" "}
+                  {selectedUser.location.adminArea}
+                </Text>
+              )}
+              <Text>
+                Badge: {selectedUser.badge ? selectedUser.badge : "beginner"}
+              </Text>
+              <Text>Posts: {JSON.stringify(selectedUser.posts)}</Text>
+              <Text>PhotoURL: {photoURL}</Text>
+              <Button
+                position="absolute"
+                top={0}
+                right={0}
+                m={4}
+                variant="subtle"
+                colorScheme="error"
+                onPress={() => setOpenDeleteDialog(true)}
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <Text>Search for user and you can manage them here.</Text>
+      )}
+      <AlertDialog
+        leastDestructiveRef={cancelRef}
+        isOpen={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+      >
+        <AlertDialog.Content bg="white">
+          <AlertDialog.CloseButton />
+          <AlertDialog.Header>
+            <Text>Delete User</Text>
+          </AlertDialog.Header>
+          <AlertDialog.Body color="muted.500">
+            <Text color="muted.500">
+              This will remove all data relating to this user. This action is
+              irreversible
+            </Text>
+          </AlertDialog.Body>
+          <AlertDialog.Footer bg="muted.200">
+            <Button.Group space={2}>
+              <Button
+                variant="unstyled"
+                colorScheme="coolGray"
+                onPress={() => setOpenDeleteDialog(false)}
+                ref={cancelRef}
+              >
+                Cancel
+              </Button>
+              <Button
+                colorScheme="error"
+                bg="error.500"
+                onPress={() => {
+                  deleteUser(selectedUID)
+                    .then((result) => {
+                      toast.success(
+                        `User deleted. ${
+                          result ? "Profile picture deleted as well!" : ""
+                        }`
+                      );
+                      setSelectedUser();
+                      setSelectedUID();
+                      setOpenDeleteDialog(false);
+                    })
+                    .catch((err) =>
+                      setError({
+                        title: "Something went wrong.",
+                        message: "Try again later.",
+                      })
+                    );
+                }}
+              >
+                Delete
+              </Button>
+            </Button.Group>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog>
+    </div>
+  );
+};
+
+const styles = {
+  backgroundStyle: {
+    flex: 1,
+    background: `linear-gradient(-45deg, #00D4FF40, #39F73940)`,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    display: "flex",
+    flexDirection: "column",
+  },
+  rowStyle: {
+    display: "flex",
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  containerStyle: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    boxShadow:
+      "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.03)",
+    padding: 30,
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    flexDirection: "column",
+    width: "100%",
+    position: "relative",
+  },
+};
+export default UsersView;

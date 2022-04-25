@@ -36,6 +36,7 @@ import VerificationRequestsView from "./Views/AdminDashboard/VerificationRequest
 import TermsOfUse from "./Routes/TermsOfUse";
 import AffiliatesView from "./Views/AdminDashboard/AffiliatesView";
 import AffiliatesDashboard from "./Views/AffiliatesDashboard/AffiliatesDashboard";
+import UsersView from "./Views/AdminDashboard/UsersView";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -216,6 +217,7 @@ function App() {
                 path="verifications"
                 element={<VerificationRequestsView />}
               />
+              <Route path="users" element={<UsersView />} />
               <Route path="affiliates" element={<AffiliatesView />} />
             </Route>
           </Routes>

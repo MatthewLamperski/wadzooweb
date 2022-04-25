@@ -13,13 +13,13 @@ import { Link, useNavigate } from "react-router-dom";
 import AppIcon from "../Assets/AppIcon.png";
 import "./Portal.css";
 
+export const camelToWords = (text) => {
+  const result = text.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
 const Portal = ({ setNavbarTransparent }) => {
   const { user } = useContext(AppContext);
   const [navbarHeight, setnavbarHeight] = useState();
-  const camelToWords = (text) => {
-    const result = text.replace(/([A-Z])/g, " $1");
-    return result.charAt(0).toUpperCase() + result.slice(1);
-  };
   const navigate = useNavigate();
   useEffect(() => {
     setNavbarTransparent(false);

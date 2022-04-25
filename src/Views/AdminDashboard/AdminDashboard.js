@@ -17,6 +17,7 @@ import {
   FaChartLine,
   FaChevronLeft,
   FaDesktop,
+  FaUserAlt,
   IoGitNetwork,
 } from "react-icons/all";
 import { FaChevronRight } from "react-icons/fa";
@@ -86,6 +87,13 @@ const AdminDashboard = ({ setNavbarTransparent, setNavbarHidden }) => {
                   >
                     Verifications
                     <Link to="verifications" />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => setCollapseSidebar(true)}
+                    icon={<FaUserAlt />}
+                  >
+                    Users
+                    <Link to="users" />
                   </MenuItem>
                   <MenuItem
                     onClick={() => setCollapseSidebar(true)}

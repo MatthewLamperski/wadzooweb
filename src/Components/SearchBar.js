@@ -16,7 +16,7 @@ const searchClient = algoliasearch(
   "876efc7750458504e73d769de1d5e989"
 );
 
-const SearchBar = ({ index }) => {
+const SearchBar = ({ index, setUserSelected }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const StateResults = ({ searching, searchResults, searchState }) => {
@@ -46,7 +46,11 @@ const SearchBar = ({ index }) => {
               <Pressable
                 p={3}
                 onPress={() => {
-                  navigate(`/listings/${hit.objectID}`);
+                  if (index === "listings") {
+                    navigate(`/listings/${hit.objectID}`);
+                  } else {
+                    setUserSelected(hit.objectID);
+                  }
                 }}
               >
                 <div className="d-flex flex-row align-items-center">
@@ -61,12 +65,10 @@ const SearchBar = ({ index }) => {
                         ? hit.fullAddress
                         : "No Address"}
                     </Text>
-                    {index === "listings" && (
-                      <Text fontSize={12} color="muted.500" fontWeight={200}>
-                        {" "}
-                        {hit.email ? hit.email : "No email address"}
-                      </Text>
-                    )}
+                    <Text fontSize={12} color="muted.500" fontWeight={200}>
+                      {" "}
+                      {hit.email ? hit.email : "No email address"}
+                    </Text>
                   </div>
                 </div>
               </Pressable>
