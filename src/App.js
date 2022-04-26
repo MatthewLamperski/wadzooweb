@@ -1,8 +1,8 @@
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
-import { NativeBaseProvider, Text } from "native-base";
-import { Route, Routes } from "react-router-dom";
-import LandingPage from "./Routes/LandingPage";
+import { Button, Icon, Modal, NativeBaseProvider, Text } from "native-base";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import LandingPage, { deviceType } from "./Routes/LandingPage";
 import BugReport from "./Routes/BugReport";
 import VerifyBadge from "./Routes/VerifyBadge";
 import PrivacyPolicy from "./Routes/PrivacyPolicy";
@@ -24,7 +24,7 @@ import Portal from "./Routes/Portal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import LoadingScreen from "./Views/LoadingScreen";
-import { getUserDoc } from "./FirebaseInterface";
+import { getUserDoc, signMeOut } from "./FirebaseInterface";
 import CreateListing from "./Views/DataEntryDashboard/CreateListing";
 import ManageListings from "./Views/DataEntryDashboard/ManageListings";
 import ListingView from "./Views/ListingView";
@@ -37,6 +37,8 @@ import TermsOfUse from "./Routes/TermsOfUse";
 import AffiliatesView from "./Views/AdminDashboard/AffiliatesView";
 import AffiliatesDashboard from "./Views/AffiliatesDashboard/AffiliatesDashboard";
 import UsersView from "./Views/AdminDashboard/UsersView";
+import UploadProperty from "./Routes/UploadProperty";
+import { FaChevronRight } from "react-icons/fa";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -59,6 +61,8 @@ function App() {
   const [FIRUser, setFIRUser] = useState();
   const [user, setUser] = useState();
   const [error, setError] = useState();
+  const [showUserSignInApp, setShowUserSignInApp] = useState(false);
+  const navigate = useNavigate();
   const appContext = {
     FIRUser,
     setFIRUser,
@@ -77,6 +81,11 @@ function App() {
             setFIRUser(authUser);
           })
           .catch((err) => {
+            toast.error("Error getting doc");
+            setShowUserSignInApp(true);
+            signMeOut();
+            setUser(null);
+            setFIRUser(null);
             console.log(err);
           });
       } else {
@@ -167,6 +176,12 @@ function App() {
               }
             />
             <Route
+              path="/uploadProperty"
+              element={
+                <UploadProperty setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
               path="/createListing"
               element={
                 <CreateListing setNavbarTransparent={setNavbarTransparent} />
@@ -193,6 +208,10 @@ function App() {
               element={
                 <BadgeStatus setNavbarTransparent={setNavbarTransparent} />
               }
+            />
+            <Route
+              path="/download"
+              element={<Beta setNavbarTransparent={setNavbarTransparent} />}
             />
             <Route
               path="/affiliate"
@@ -223,6 +242,66 @@ function App() {
           </Routes>
           <Footer />
           <ToastContainer hideProgressBar />
+          <Modal
+            isOpen={showUserSignInApp}
+            onClose={() => setShowUserSignInApp(false)}
+            _backdrop={{ bg: "warmGray.500" }}
+            size={
+              deviceType() === "iOS" || deviceType() === "android" ? "xl" : "lg"
+            }
+          >
+            <Modal.Content
+              marginBottom={
+                deviceType() === "iOS" || deviceType() === "android"
+                  ? "auto"
+                  : 0
+              }
+              marginTop={
+                deviceType() === "iOS" || deviceType() === "android" ? 12 : 0
+              }
+            >
+              <Modal.CloseButton />
+              <Modal.Header>
+                <Text>Create an Account on the App!</Text>
+              </Modal.Header>
+              <Modal.Body>
+                <Text>It looks like this is your first time signing in!</Text>
+                <Text py={2} fontSize={14} color="muted.600">
+                  Before being able to able to sign in on the web, you must
+                  register your account on the mobile app.
+                </Text>
+                <Text>
+                  Wadzoo is available for beta testing now. Once your account
+                  has been created, come back here and log in!
+                </Text>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button.Group space={2}>
+                  <Button
+                    my={0}
+                    variant="ghost"
+                    colorScheme="blueGray"
+                    onPress={() => {
+                      setShowUserSignInApp(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    shadow={0}
+                    rightIcon={<Icon as={<FaChevronRight />} />}
+                    my={0}
+                    onPress={() => {
+                      navigate("/download");
+                      setShowUserSignInApp(false);
+                    }}
+                  >
+                    Download the App
+                  </Button>
+                </Button.Group>
+              </Modal.Footer>
+            </Modal.Content>
+          </Modal>
         </NativeBaseProvider>
       </ParallaxProvider>
     </AppContext.Provider>

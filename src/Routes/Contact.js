@@ -31,7 +31,7 @@ const Contact = ({ setNavbarTransparent }) => {
         }}
       >
         <Row style={{ width: "100%" }}>
-          <Col>
+          <Col className="d-flex flex-column align-items-start">
             <h1
               style={{
                 color: theme.colors.secondary["800"],
@@ -62,7 +62,10 @@ const Contact = ({ setNavbarTransparent }) => {
               }}
             >
               Test out Wadzoo before it launches{" "}
-              <Link style={{ color: theme.colors.primary["500"] }} to="/beta">
+              <Link
+                style={{ color: theme.colors.primary["500"] }}
+                to="/download"
+              >
                 here.
               </Link>
             </h3>

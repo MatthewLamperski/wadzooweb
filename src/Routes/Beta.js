@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ParallaxBanner } from "react-scroll-parallax";
 import HouseCover from "../Assets/HousesCover.png";
-import { Col, Container, Image, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { Button, HStack, Text, useTheme } from "native-base";
 import { FaAndroid, FaApple, FaChevronRight } from "react-icons/fa";
 
@@ -41,13 +41,13 @@ const Beta = ({ setNavbarTransparent }) => {
                 <Container
                   style={{
                     height: "50%",
-                    justifyContent: "center",
+                    justifyContent: "flex-start",
                     alignItems: "center",
                     display: "flex",
                   }}
                 >
                   <Row style={{ width: "100%" }}>
-                    <Col>
+                    <Col className="d-flex flex-column align-items-start">
                       <h1
                         style={{
                           color: theme.colors.primary["50"],

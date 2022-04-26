@@ -38,7 +38,7 @@ const Footer = () => {
                   fontFamily: "Avenir-Heavy",
                   cursor: "pointer",
                 }}
-                onClick={() => navigate("/beta")}
+                onClick={() => navigate("/download")}
               >
                 Beta Test
               </a>

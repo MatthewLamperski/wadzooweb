@@ -3,6 +3,7 @@ import {
   getAuth,
   getRedirectResult,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
@@ -65,6 +66,34 @@ export const getRedirect = () => {
     const auth = getAuth();
     getRedirectResult(auth)
       .then((result) => resolve(result.user))
+      .catch((err) => reject(err));
+  });
+};
+
+export const continueWithAppleRedirect = () => {
+  return new Promise((resolve, reject) => {
+    const provider = new OAuthProvider("apple.com");
+    provider.addScope("email");
+    provider.addScope("name");
+    const auth = getAuth();
+    signInWithRedirect(auth, provider)
+      .then((result) => {
+        resolve(result.user);
+      })
+      .catch((err) => reject(err));
+  });
+};
+
+export const continueWithApplePopup = () => {
+  return new Promise((resolve, reject) => {
+    const provider = new OAuthProvider("apple.com");
+    provider.addScope("email");
+    provider.addScope("name");
+    const auth = getAuth();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        resolve(result.user);
+      })
       .catch((err) => reject(err));
   });
 };

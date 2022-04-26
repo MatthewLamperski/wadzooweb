@@ -78,7 +78,7 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
               <Nav.Link
                 onClick={() => {
                   setShow(false);
-                  navigate("/beta");
+                  navigate("/download");
                 }}
               >
                 <div

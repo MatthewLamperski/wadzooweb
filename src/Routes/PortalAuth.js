@@ -4,13 +4,17 @@ import { Col, Container, Image } from "react-bootstrap";
 import LogoBlack from "../Assets/LogoBlack.png";
 import GoogleLogo from "../Assets/svgs/GoogleLogo";
 import {
-  continueWithGoogleRedirect,
+  continueWithApplePopup,
+  continueWithAppleRedirect,
   continueWithGooglePopup,
+  continueWithGoogleRedirect,
   getRedirect,
   signInWithEmail,
 } from "../FirebaseInterface";
 import { AppContext } from "../AppContext";
 import { deviceType } from "./LandingPage";
+import { FaApple } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const PortalAuth = ({ setNavbarTransparent, text }) => {
   const { setError } = useContext(AppContext);
@@ -18,6 +22,7 @@ const PortalAuth = ({ setNavbarTransparent, text }) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     setNavbarTransparent(false);
@@ -65,28 +70,64 @@ const PortalAuth = ({ setNavbarTransparent, text }) => {
     if (!googleLoading) {
       setGoogleLoading(true);
       if (deviceType() === "iOS" || deviceType() === "android") {
-        continueWithGoogleRedirect().catch((err) => {
-          setGoogleLoading(false);
-          console.log(err);
-          setError({
-            title: err.code,
-            message: `${JSON.stringify(err)}`,
-          });
-        });
-      } else {
-        continueWithGooglePopup().catch((err) => {
-          setGoogleLoading(false);
-          console.log(err);
-          if (err.code !== "auth/popup-closed-by-user") {
+        continueWithGoogleRedirect()
+          .then(() => setGoogleLoading(false))
+          .catch((err) => {
+            setGoogleLoading(false);
+            console.log(err);
             setError({
-              title: "Something went wrong.",
-              message: `Contact Development: ${JSON.stringify(err)}`,
+              title: err.code,
+              message: `${JSON.stringify(err)}`,
             });
-          }
-        });
+          });
+      } else {
+        continueWithGooglePopup()
+          .then(() => setGoogleLoading(false))
+          .catch((err) => {
+            setGoogleLoading(false);
+            console.log(err);
+            if (err.code !== "auth/popup-closed-by-user") {
+              setError({
+                title: "Something went wrong.",
+                message: `Contact Development: ${JSON.stringify(err)}`,
+              });
+            }
+          });
       }
     } else {
       setGoogleLoading(false);
+    }
+  };
+  const handleContinueWithApple = () => {
+    if (!appleLoading) {
+      setAppleLoading(true);
+      if (deviceType() === "iOS" || deviceType() === "android") {
+        continueWithAppleRedirect()
+          .then(() => setAppleLoading(false))
+          .catch((err) => {
+            setAppleLoading(false);
+            console.log(err);
+            if (err.code !== "auth/popup-closed-by-user") {
+              setError({
+                title: "Something went wrong.",
+                message: `Contact Development: ${JSON.stringify(err)}`,
+              });
+            }
+          });
+      } else {
+        continueWithApplePopup()
+          .then(() => setAppleLoading(false))
+          .catch((err) => {
+            setAppleLoading(false);
+            console.log(err);
+            if (err.code !== "auth/popup-closed-by-user") {
+              setError({
+                title: "Something went wrong.",
+                message: `Contact Development: ${JSON.stringify(err)}`,
+              });
+            }
+          });
+      }
     }
   };
   const handleLogIn = () => {
@@ -158,7 +199,7 @@ const PortalAuth = ({ setNavbarTransparent, text }) => {
           <Text px={3} fontSize={18} color="muted.500">
             {text ? text : "Access your Wadzoo portal here."}
           </Text>
-          <div className="py-5">
+          <div className="py-4">
             <Button
               _pressed={{ opacity: 0.4 }}
               borderRadius={50}
@@ -167,24 +208,30 @@ const PortalAuth = ({ setNavbarTransparent, text }) => {
               variant="unstyled"
               onPress={handleContinueWithGoogle}
               type="submit"
+              leftIcon={<GoogleLogo height="18" width="18" />}
+              _text={{ fontWeight: 300 }}
+              isLoading={googleLoading}
+              isLoadingText="Signing you in..."
+              _spinner={{ color: "black" }}
             >
-              <div
-                style={{
-                  flexDirection: "row",
-                  display: "flex",
-                }}
-              >
-                {googleLoading ? (
-                  <Spinner color="primary.500" />
-                ) : (
-                  <>
-                    <GoogleLogo height="18" width="18" />
-                    <Text px={2} fontSize={14} fontWeight={300} color="black">
-                      Continue with Google
-                    </Text>{" "}
-                  </>
-                )}
-              </div>
+              Log in with Google
+            </Button>
+            <Button
+              my={2}
+              _pressed={{ opacity: 0.4 }}
+              borderRadius={50}
+              borderWidth={1}
+              borderColor="muted.300"
+              variant="unstyled"
+              onPress={handleContinueWithApple}
+              isLoading={appleLoading}
+              isLoadingText="Signing you in..."
+              _spinner={{ color: "black" }}
+              _text={{ fontWeight: 300 }}
+              type="submit"
+              leftIcon={<FaApple size={22} />}
+            >
+              Log in with Apple
             </Button>
           </div>
           <div
@@ -278,6 +325,17 @@ const PortalAuth = ({ setNavbarTransparent, text }) => {
                 </Text>
               )}
             </Button>
+            <div className="my-4">
+              <Text fontSize={14} color="muted.500">
+                Don't have a Wadzoo account yet? Create one with our{" "}
+                <Link
+                  style={{ color: theme.colors.primary["500"] }}
+                  to="/download"
+                >
+                  mobile app.
+                </Link>
+              </Text>
+            </div>
           </div>
         </Col>
       </Container>

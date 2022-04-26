@@ -197,7 +197,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
         >
           <Col style={styles.badgeContainer} xs={12} sm={8} md={4} lg={3}>
             <a
-              onClick={() => navigate("/beta")}
+              onClick={() => navigate("/download")}
               className="animate-shadow-card"
               style={styles.cardContainer}
             >
@@ -248,7 +248,7 @@ const VerifyBadge = ({ setNavbarTransparent }) => {
                   </Text>
                 </div>
                 <Button
-                  onPress={() => navigate("/beta")}
+                  onPress={() => navigate("/download")}
                   mt={7}
                   mx="auto"
                   borderRadius={50}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useTheme } from "native-base";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -53,8 +53,11 @@ const AccessDenied = () => {
                 fontFamily: "Avenir-Heavy",
               }}
             >
-              Test out Wadzoo before it launches{" "}
-              <Link style={{ color: theme.colors.primary["500"] }} to="/beta">
+              Download Wadzoo{" "}
+              <Link
+                style={{ color: theme.colors.primary["500"] }}
+                to="/download"
+              >
                 here.
               </Link>
             </h3>

@@ -296,7 +296,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                     backgroundColor: theme.colors.primary["500"],
                     fontFamily: "Avenir-Heavy",
                   }}
-                  onPress={() => navigate("/beta")}
+                  onPress={() => navigate("/download")}
                 >
                   <HStack alignItems="center" space={2}>
                     <Text fontWeight={300} button>

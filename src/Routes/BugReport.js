@@ -62,7 +62,10 @@ const BugReport = ({ setNavbarTransparent }) => {
               }}
             >
               Test out Wadzoo before it launches{" "}
-              <Link style={{ color: theme.colors.primary["500"] }} to="/beta">
+              <Link
+                style={{ color: theme.colors.primary["500"] }}
+                to="/download"
+              >
                 here.
               </Link>
             </h3>

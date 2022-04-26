@@ -166,6 +166,7 @@ export const appTheme = extendTheme({
     },
   },
   config: {
-    useSystemColorMode: true,
+    useSystemColorMode: false,
+    initialColorMode: "light",
   },
 });
