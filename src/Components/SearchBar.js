@@ -93,7 +93,11 @@ const SearchBar = ({ index, setUserSelected }) => {
       >
         <Input
           size="lg"
-          placeholder="Search by address"
+          placeholder={
+            index === "listings"
+              ? "Search by address"
+              : "Search by name or email"
+          }
           _hover={{ bg: "white" }}
           fontWeight={300}
           borderRadius={100}

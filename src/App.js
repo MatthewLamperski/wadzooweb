@@ -81,7 +81,6 @@ function App() {
             setFIRUser(authUser);
           })
           .catch((err) => {
-            toast.error("Error getting doc");
             setShowUserSignInApp(true);
             signMeOut();
             setUser(null);

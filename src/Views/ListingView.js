@@ -227,12 +227,15 @@ const ListingView = ({ setNavbarTransparent }) => {
                     colorScheme="error"
                     bg="error.500"
                     onPress={() => {
-                      deleteListing(docID)
+                      // ADD USER ID
+                      deleteListing(docID, listing.lister)
                         .then((res) => {
                           console.log("deleted??", res);
                           toast.success(
                             `Property Deleted. ${
-                              !res && "There were no images to delete"
+                              !res
+                                ? "There were no images to delete"
+                                : "All images were deleted as well."
                             }`
                           );
                           navigate("/manageListings");

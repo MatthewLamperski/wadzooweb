@@ -34,6 +34,7 @@ import Geocode from "react-geocode";
 import ngeohash from "ngeohash";
 import { createListing, getProfilePicURL } from "../FirebaseInterface";
 import useWindowDimensions from "../WindowDimensionsHook";
+import LoadingScreen from "../Views/LoadingScreen";
 
 const propertyTypeVals = [
   "Single Family Residential",
@@ -89,6 +90,10 @@ const UploadProperty = ({ setNavbarTransparent }) => {
         ...prevState,
         listerObj: user,
         email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        ...(user.companyName ? { companyName: user.companyName } : {}),
+        ...(user.phoneNumber ? { phoneNumber: user.phoneNumber } : {}),
       }));
       getProfilePicURL(user.uid)
         .then((url) => setListerPPUrl(url))
@@ -132,7 +137,18 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                 createListing(newListing, uploadImages, listing.docID)
                   .then((newDoc) => {
                     toast.success("Listing successfully updated!");
-                    setListing();
+                    setListing({
+                      listerObj: user,
+                      email: user.email,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      ...(user.companyName
+                        ? { companyName: user.companyName }
+                        : {}),
+                      ...(user.phoneNumber
+                        ? { phoneNumber: user.phoneNumber }
+                        : {}),
+                    });
                     setCreateLoading(false);
                     setTmpImage();
                     setUploadImages();
@@ -146,7 +162,18 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                 createListing(newListing, false, listing.docID)
                   .then((newDoc) => {
                     toast.success("Listing successfully updated!");
-                    setListing();
+                    setListing({
+                      listerObj: user,
+                      email: user.email,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      ...(user.companyName
+                        ? { companyName: user.companyName }
+                        : {}),
+                      ...(user.phoneNumber
+                        ? { phoneNumber: user.phoneNumber }
+                        : {}),
+                    });
                     setCreateLoading(false);
                     setTmpImage();
                     setUploadImages();
@@ -163,7 +190,18 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                 createListing(newListing, uploadImages)
                   .then((newDoc) => {
                     toast.success("Listing successfully uploaded!");
-                    setListing();
+                    setListing({
+                      listerObj: user,
+                      email: user.email,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      ...(user.companyName
+                        ? { companyName: user.companyName }
+                        : {}),
+                      ...(user.phoneNumber
+                        ? { phoneNumber: user.phoneNumber }
+                        : {}),
+                    });
                     setCreateLoading(false);
                     setTmpImage();
                     setUploadImages();
@@ -177,7 +215,18 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                 createListing(newListing)
                   .then((newDoc) => {
                     toast.success("Listing successfully uploaded!");
-                    setListing();
+                    setListing({
+                      listerObj: user,
+                      email: user.email,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      ...(user.companyName
+                        ? { companyName: user.companyName }
+                        : {}),
+                      ...(user.phoneNumber
+                        ? { phoneNumber: user.phoneNumber }
+                        : {}),
+                    });
                     setCreateLoading(false);
                     setTmpImage();
                     setUploadImages();
@@ -211,7 +260,7 @@ const UploadProperty = ({ setNavbarTransparent }) => {
     if (listing) {
       if (listing.listerObj === undefined) {
         setError({
-          title: "Must include a lister.",
+          title: "Must include a seller.",
           message: "Start typing to find users, if none show up, create one.",
         });
         return false;
@@ -219,55 +268,99 @@ const UploadProperty = ({ setNavbarTransparent }) => {
         setFormErrors({
           phoneNumber: "Phone number required",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Phone number required",
+        });
         return false;
       } else if (listing.companyName === undefined) {
         setFormErrors({
           companyName: "Company Name required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Company name required",
         });
         return false;
       } else if (listing.address === undefined) {
         setFormErrors({
           address: "Address required",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Address required",
+        });
         return false;
       } else if (listing.city === undefined) {
         setFormErrors({
           city: "City required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "City required",
         });
         return false;
       } else if (listing.state === undefined) {
         setFormErrors({
           state: "State required",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "State required",
+        });
         return false;
       } else if (listing.zipCode === undefined) {
         setFormErrors({
           zipCode: "Zip code required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Zip code required",
         });
         return false;
       } else if (listing.beds === undefined) {
         setFormErrors({
           beds: "Beds required",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Number of beds required",
+        });
         return false;
       } else if (listing.baths === undefined) {
         setFormErrors({
           baths: "Baths required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Number of baths required",
         });
         return false;
       } else if (listing.sqftHeated === undefined) {
         setFormErrors({
           sqftHeated: "Sqft Heated required",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Sqft heated required",
+        });
         return false;
       } else if (listing.purchasePrice === undefined) {
         setFormErrors({
           purchasePrice: "Price required, must be a number",
         });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Price required",
+        });
         return false;
       } else if (listing.propertyType === undefined) {
         setFormErrors({
           propertyType: "Property type required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "Property type required",
         });
         return false;
       } else if (
@@ -276,6 +369,10 @@ const UploadProperty = ({ setNavbarTransparent }) => {
       ) {
         setFormErrors({
           images: "At least one image required",
+        });
+        setError({
+          title: "Please fill all required fields.",
+          message: "At least one image required",
         });
       } else {
         setFormErrors({});
@@ -332,9 +429,25 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                 >
                   <div>
                     <div>
-                      <Text color="primary.500" fontWeight={300} fontSize={20}>
-                        Create Property
-                      </Text>
+                      <div className="d-flex flex-column">
+                        <Text
+                          color="primary.500"
+                          fontWeight={300}
+                          fontSize={20}
+                        >
+                          Create Property
+                        </Text>
+                        <Text py={2} fontSize={14} color="muted.500">
+                          Is something not working or would you like to provide
+                          feedback?{" "}
+                          <a
+                            style={{ color: theme.colors.primary["500"] }}
+                            href="mailto:matthew@wadzoo.com?subject=Wadzoo Uploading Property Issue/Feedback"
+                          >
+                            Contact us here
+                          </a>
+                        </Text>
+                      </div>
                       {listing && listing.listerObj && listing.email && (
                         <div className="d-flex flex-column mt-3">
                           <Text fontSize={18} color="secondary.800">
@@ -1069,19 +1182,25 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                   <div
                     className="p-3"
                     style={{
-                      backgroundColor: "red",
+                      backgroundColor: "white",
                       borderRadius: 10,
                       boxShadow:
                         "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
                     }}
                   >
+                    <Text fontSize={12} color="muted.500">
+                      Once you have entered all property information, check the
+                      live preview to make sure things look good. Then press
+                      upload!
+                    </Text>
                     <Button
+                      mt={4}
                       isLoading={createLoading}
                       borderRadius={10}
                       onPress={handleCreateListing}
                       _text={{ color: "white" }}
                     >
-                      Create
+                      Upload
                     </Button>
                   </div>
                 </div>
@@ -1114,6 +1233,16 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                     </Text>
                     <Text fontSize={14} color="muted.400">
                       The preview will update as you fill in the form.
+                    </Text>
+                    <Text fontSize={14} color="muted.500">
+                      Is something not working or would you like to provide
+                      feedback?{" "}
+                      <a
+                        style={{ color: theme.colors.primary["500"] }}
+                        href="mailto:matthew@wadzoo.com?subject=Wadzoo Uploading Property Issue/Feedback"
+                      >
+                        Contact us here
+                      </a>
                     </Text>
                     <div
                       className="iphone-x flex-column justify-content-flex-start align-items-center"
@@ -1644,77 +1773,6 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                         </HStack>
                       </VStack>
                     </div>
-                    <div
-                      className="py-3"
-                      style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div className="d-flex flex-column">
-                        <Text
-                          fontSize={20}
-                          fontWeight={300}
-                          color="secondary.800"
-                        >
-                          Raw Data
-                        </Text>
-                        <Text fontSize={14} color="muted.400">
-                          Here you can see the data as text as it is filled in.
-                        </Text>
-                      </div>
-                      <Button
-                        variant="subtle"
-                        onPress={() => setShowData(!showData)}
-                      >
-                        {showData ? "Hide Data" : "Show Data"}
-                      </Button>
-                    </div>
-                    <PresenceTransition
-                      visible={showData}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1, transition: { duration: 500 } }}
-                    >
-                      <Text>
-                        {listing
-                          ? JSON.stringify(
-                              listing,
-                              [
-                                "phoneNumber",
-                                "companyName",
-                                "address",
-                                "city",
-                                "state",
-                                "zipCode",
-                                "beds",
-                                "baths",
-                                "propertyType",
-                                "acres",
-                                "yearBuilt",
-                                "arv",
-                                "occupancyStatus",
-                                "repairCost",
-                                "cap",
-                                "rent",
-                                "buyersFee",
-                                "noi",
-                                "images",
-                                "purchasePrice",
-                                "sqftHeated",
-                                "email",
-                                "comments",
-                                "firstName",
-                                "lastName",
-                                "docID",
-                                "listerObj",
-                              ],
-                              3
-                            )
-                          : "No Data to show yet"}
-                      </Text>
-                    </PresenceTransition>
                   </div>
                 </div>
               </div>
@@ -1731,13 +1789,19 @@ const UploadProperty = ({ setNavbarTransparent }) => {
                         "0 4px 8px 0 rgba(0, 0, 0, 0.01), 0 6px 20px 0 rgba(0, 0, 0, 0.09)",
                     }}
                   >
+                    <Text fontSize={12} color="muted.500">
+                      Once you have entered all property information, check the
+                      live preview to make sure things look good. Then press
+                      upload!
+                    </Text>
                     <Button
+                      mt={4}
                       isLoading={createLoading}
                       borderRadius={10}
                       onPress={handleCreateListing}
                       _text={{ color: "white" }}
                     >
-                      Create
+                      Upload
                     </Button>
                   </div>
                 </div>
@@ -1807,13 +1871,15 @@ const UploadProperty = ({ setNavbarTransparent }) => {
         </div>
       </PresenceTransition>
     );
-  } else {
+  } else if (user === null) {
     return (
       <PortalAuth
         setNavbarTransparent={setNavbarTransparent}
         text="You must log into with your Wadzoo Account to upload properties."
       />
     );
+  } else {
+    return <LoadingScreen setNavbarTransparent={setNavbarTransparent} />;
   }
 };
 

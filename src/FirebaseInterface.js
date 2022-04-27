@@ -10,9 +10,10 @@ import {
   signOut,
 } from "firebase/auth";
 
-import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes,} from "firebase/storage";
+import {deleteObject, getDownloadURL, getStorage, listAll, ref, uploadBytes,} from "firebase/storage";
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   collectionGroup,
@@ -585,22 +586,36 @@ export const deleteUser = (uid) => {
   });
 };
 
-export const deleteListing = (docID) => {
+export const deleteListing = (docID, uid) => {
   return new Promise(async (resolve, reject) => {
     //Delete images if exists
     const storage = getStorage();
-    const folderRef = ref(storage, `listings/${docID}`);
-    let folderExisted = true;
-    try {
-      const result = await deleteObject(folderRef);
-    } catch (err) {
-      folderExisted = false;
-    }
-    deleteDoc(doc(db, `/listings/${docID}`))
-      .then(() => {
-        resolve(folderExisted);
-      })
-      .catch((err) => reject(err));
+    const folderRef = ref(storage, `/listings/${docID}`);
+    listAll(folderRef).then((images) => {
+      let deletedImages = 0;
+      images.items.forEach((image) => {
+        deleteObject(image)
+          .then(() => {
+            deletedImages++;
+            console.log("deleted");
+            if (deletedImages === images.items.length) {
+              deleteDoc(doc(db, `/listings/${docID}`))
+                .then(() => {
+                  updateDoc(doc(db, `/users/${uid}`), {
+                    listings: arrayRemove(docID),
+                  })
+                    .then(() => resolve(true))
+                    .catch((err) => {
+                      console.log(err);
+                      resolve(true);
+                    });
+                })
+                .catch((err) => reject(err));
+            }
+          })
+          .catch((err) => reject(err));
+      });
+    });
   });
 };
 

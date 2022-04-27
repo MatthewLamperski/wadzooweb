@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Button,
-  HStack,
   Input,
   Modal,
   PresenceTransition,
@@ -167,6 +166,7 @@ const AddPropertyImages = ({
                   }}
                 >
                   <input
+                    multiple
                     type="file"
                     accept="image/png image/jpeg"
                     style={{ display: "none" }}
@@ -292,7 +292,7 @@ const AddPropertyImages = ({
             <Text>Cancel</Text>
           </Button>
           <Button onPress={handleUploadImages}>
-            {uploading ? <Spinner color="white" /> : <Text>Create</Text>}
+            {uploading ? <Spinner color="white" /> : <Text>Set Images</Text>}
           </Button>
         </Button.Group>
       </Modal.Footer>

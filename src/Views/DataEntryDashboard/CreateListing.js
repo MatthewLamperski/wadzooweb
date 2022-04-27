@@ -583,15 +583,15 @@ const CreateListing = ({ setNavbarTransparent }) => {
                               </Button>
                             </div>
                           </Box>
-                          {listerPPUrl === null && (
-                            <Button
-                              my={2}
-                              variant="subtle"
-                              onPress={() => setShowCompanyLogoModal(true)}
-                            >
-                              Add Company Logo
-                            </Button>
-                          )}
+                          <Button
+                            my={2}
+                            variant="subtle"
+                            onPress={() => setShowCompanyLogoModal(true)}
+                          >
+                            {`${
+                              listerPPUrl === null ? "Set" : "Change"
+                            } Company Logo`}
+                          </Button>
                         </div>
                       ) : (
                         <div className="py-3">
@@ -2052,6 +2052,7 @@ const CreateListing = ({ setNavbarTransparent }) => {
             >
               {listing && listing.listerObj && listing.listerObj.uid ? (
                 <AddCompanyLogo
+                  header="Add Company Logo"
                   uid={listing.listerObj.uid}
                   setListerPPUrl={setListerPPUrl}
                   setShowCompanyLogoModal={setShowCompanyLogoModal}

@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import {
-  FaFile,
-  FaImage,
-  FaLink,
-  FaTimes,
-  FaTimesCircle,
-} from "react-icons/all";
+import { FaImage, FaLink, FaTimesCircle } from "react-icons/all";
 import {
   Button,
-  HStack,
   Input,
   Modal,
   PresenceTransition,
@@ -21,7 +14,12 @@ import { AppContext } from "../../AppContext";
 import { uploadProfilePic } from "../../FirebaseInterface";
 import { toast } from "react-toastify";
 
-const AddCompanyLogo = ({ setListerPPUrl, setShowCompanyLogoModal, uid }) => {
+const AddCompanyLogo = ({
+  setListerPPUrl,
+  setShowCompanyLogoModal,
+  uid,
+  header,
+}) => {
   const theme = useTheme();
   const { setError } = useContext(AppContext);
   const [link, setLink] = useState();
@@ -91,8 +89,10 @@ const AddCompanyLogo = ({ setListerPPUrl, setShowCompanyLogoModal, uid }) => {
             uploadProfilePic(uid, file)
               .then((url) => {
                 console.log(url);
-                setListerPPUrl(url);
-                toast.success("Company Logo uploaded successfully");
+                if (setListerPPUrl) {
+                  setListerPPUrl(url);
+                }
+                toast.success("Profile picture uploaded successfully");
                 setShowCompanyLogoModal(false);
               })
               .catch((err) => {
@@ -139,7 +139,9 @@ const AddCompanyLogo = ({ setListerPPUrl, setShowCompanyLogoModal, uid }) => {
         uploadProfilePic(uid, selectedImage)
           .then((url) => {
             console.log(url);
-            setListerPPUrl(url);
+            if (setListerPPUrl) {
+              setListerPPUrl(url);
+            }
             toast.success("Company Logo uploaded successfully");
             setShowCompanyLogoModal(false);
           })
@@ -173,7 +175,7 @@ const AddCompanyLogo = ({ setListerPPUrl, setShowCompanyLogoModal, uid }) => {
     <Modal.Content shadow={0} bg="white">
       <Modal.CloseButton colorScheme="red" />
       <Modal.Header borderBottomWidth={0}>
-        <Text fontSize={20}>Add Company Logo</Text>
+        <Text fontSize={20}>{header}</Text>
       </Modal.Header>
       <Modal.Body>
         <div
@@ -291,7 +293,11 @@ const AddCompanyLogo = ({ setListerPPUrl, setShowCompanyLogoModal, uid }) => {
             <Text>Cancel</Text>
           </Button>
           <Button onPress={handleUploadLogo}>
-            {uploading ? <Spinner color="white" /> : <Text>Create</Text>}
+            {uploading ? (
+              <Spinner color="white" />
+            ) : (
+              <Text>Set Profile Picture</Text>
+            )}
           </Button>
         </Button.Group>
       </Modal.Footer>

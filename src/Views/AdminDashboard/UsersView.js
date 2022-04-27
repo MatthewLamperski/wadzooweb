@@ -4,6 +4,8 @@ import {
   Box,
   Button,
   Image,
+  Modal,
+  Pressable,
   Spinner,
   Text,
   useTheme,
@@ -17,6 +19,7 @@ import {
 import { AppContext } from "../../AppContext";
 import { FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
+import AddCompanyLogo from "../DataEntryDashboard/AddCompanyLogo";
 
 const UsersView = () => {
   const { setError } = useContext(AppContext);
@@ -25,6 +28,7 @@ const UsersView = () => {
   const [selectedUser, setSelectedUser] = useState();
   const [photoURL, setPhotoURL] = useState();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [showUpdateProfilePic, setShowUpdateProfilePic] = useState(false);
   const cancelRef = useRef(null);
   useEffect(() => {
     if (selectedUID) {
@@ -64,35 +68,67 @@ const UsersView = () => {
               style={{ wordBreak: "break-word" }}
               className="d-flex flex-grow-1 flex-column"
             >
-              <Image
-                key={photoURL ? photoURL : "wadzoo.com"}
-                height={40}
-                alt="Profile"
-                width={40}
-                borderRadius={80}
-                borderWidth={1}
-                borderColor="primary.500"
-                source={{
-                  uri: photoURL ? photoURL : "wadzoo.com",
-                }}
-                fallbackElement={
-                  <Box
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 40,
-                      backgroundColor: theme.colors.muted["500"],
-                      borderWidth: 1,
-                      borderColor: theme.colors.primary["500"],
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <FaUser color={theme.colors.lightText} size={10} />
-                  </Box>
-                }
-              />
+              <div className="d-flex">
+                <Pressable
+                  display="flex"
+                  my={2}
+                  onPress={() => setShowUpdateProfilePic(true)}
+                >
+                  {({ isHovered }) => {
+                    if (isHovered) {
+                      return (
+                        <Box
+                          w={40}
+                          h={40}
+                          borderRadius={80}
+                          borderWidth={1}
+                          borderColor="primary.500"
+                          bg="muted.500"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                        >
+                          <Text color="white">Change Profile Picture</Text>
+                        </Box>
+                      );
+                    } else {
+                      return (
+                        <Image
+                          key={photoURL ? photoURL : "wadzoo.com"}
+                          height={40}
+                          alt="Profile"
+                          width={40}
+                          borderRadius={80}
+                          borderWidth={1}
+                          borderColor="primary.500"
+                          source={{
+                            uri: photoURL ? photoURL : "wadzoo.com",
+                          }}
+                          fallbackElement={
+                            <Box
+                              w={40}
+                              h={40}
+                              borderRadius={80}
+                              borderWidth={1}
+                              borderColor="primary.500"
+                              bg="muted.500"
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <FaUser
+                                color={theme.colors.lightText}
+                                size={10}
+                              />
+                            </Box>
+                          }
+                        />
+                      );
+                    }
+                  }}
+                </Pressable>
+              </div>
+
               <Text>First Name: {selectedUser.firstName}</Text>
               <Text>Last Name: {selectedUser.lastName}</Text>
               <Text>Email: {selectedUser.email}</Text>
@@ -125,6 +161,19 @@ const UsersView = () => {
       ) : (
         <Text>Search for user and you can manage them here.</Text>
       )}
+      <Modal
+        isOpen={showUpdateProfilePic}
+        onClose={() => setShowUpdateProfilePic(false)}
+        _backdrop={{ bg: "warmGray.500" }}
+        size="xl"
+      >
+        <AddCompanyLogo
+          header="Update User Profile Picture"
+          uid={selectedUID}
+          setListerPPUrl={setPhotoURL}
+          setShowCompanyLogoModal={setShowUpdateProfilePic}
+        />
+      </Modal>
       <AlertDialog
         leastDestructiveRef={cancelRef}
         isOpen={openDeleteDialog}
