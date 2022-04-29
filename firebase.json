@@ -43,6 +43,10 @@
         "function": "getAccounts"
       },
       {
+        "source": "/logo.png",
+        "destination": "/logo.png"
+      },
+      {
         "source": "!/api/**",
         "destination": "/index.html"
       }
