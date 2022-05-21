@@ -680,6 +680,31 @@ exports.sendMessageNotification = functions.firestore
       }
     });
 
+exports.giveUserProMembership = functions.firestore
+    .document("users/{uid}")
+    .onCreate((snap, context) => {
+      admin
+          .firestore()
+          .doc("app/appInfo")
+          .get()
+          .then((docSnapshot) => {
+            const {environment} = docSnapshot.data();
+            if (environment === "development") {
+              snap.ref
+                  .update({
+                    activeProducts: ["pro_monthly"],
+                  })
+                  .then(() => {
+                    // eslint-disable-next-line max-len
+                    functions.logger.log("Updated activeProducts to give free Pro");
+                  })
+                  .catch((err) =>
+                    functions.logger.error("Error giving pro membership", err)
+                  );
+            }
+          });
+    });
+
 exports.testSendDataMessage = functions.https.onRequest((req, res) => {
   cors(req, res, () => {
     if (req.method === "POST") {
