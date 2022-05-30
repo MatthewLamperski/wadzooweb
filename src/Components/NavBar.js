@@ -6,15 +6,17 @@ import LogoLongWhite from "../Assets/LogoLongWhite.png";
 import LogoLongBlack from "../Assets/LogoLongBlack.png";
 import { signMeOut } from "../FirebaseInterface";
 import {
+  FaAppStore,
   FaChevronRight,
   FaEnvelope,
+  FaGooglePlay,
   FaSignOutAlt,
   FaTachometerAlt,
-  FaVial,
 } from "react-icons/fa";
 import { AppContext } from "../AppContext";
 import { useNavigate } from "react-router-dom";
 import { FaHome } from "react-icons/all";
+import { deviceType } from "../Routes/LandingPage";
 
 const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
   const { FIRUser, user } = useContext(AppContext);
@@ -94,13 +96,22 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <FaVial
-                      color={theme.colors.secondary["800"]}
-                      size={22}
-                      className="mx-2"
-                    />
+                    {deviceType() === "android" ? (
+                      <FaGooglePlay
+                        size={22}
+                        color={theme.colors.secondary["800"]}
+                        className="mx-2"
+                      />
+                    ) : (
+                      <FaAppStore
+                        solid
+                        size={22}
+                        color={theme.colors.secondary["800"]}
+                        className="mx-2"
+                      />
+                    )}
                     <Text color="secondary.800" fontWeight={300} fontSize={20}>
-                      Beta Testing
+                      Download
                     </Text>
                   </div>
                   <FaChevronRight

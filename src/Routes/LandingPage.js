@@ -26,7 +26,7 @@ export const deviceType = () => {
   }
 
   if (/android/i.test(userAgent)) {
-    return "Android";
+    return "android";
   }
 
   // iOS detection from: http://stackoverflow.com/a/9039885/177710
@@ -70,7 +70,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
       <ParallaxBanner
         className="banner"
         style={{
-          height: "91vh",
+          height: "110vh",
         }}
         layers={[
           {
@@ -90,7 +90,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                     autoPlay: true,
                     loop: true,
                     playsInline: true,
-                    poster: deviceType() === "Android" ? HousesCover : null,
+                    poster: deviceType() === "android" ? HousesCover : null,
                     style: {
                       width: "100%",
                       height: "100%",
@@ -176,7 +176,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   onPress={() => {
                     if (deviceType() === "iOS") {
                       window.open(
-                        "https://apps.apple.com/us/app/wadzoo/id1605839076"
+                        "https://apps.apple.com/us/app/wadzoo/id1605839076?itsct=apps_box_link&itscg=30200"
                       );
                     } else if (deviceType() === "android") {
                       window.open(
@@ -187,9 +187,23 @@ const LandingPage = ({ setNavbarTransparent }) => {
                     }
                   }}
                 >
-                  PRE-ORDER
+                  DOWNLOAD NOW
                 </Button>
               </div>
+              <HStack alignItems="center" justifyContent="flex-start">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      '<a href="https://apps.apple.com/us/app/wadzoo/id1605839076?itsct=apps_box_badge&amp;itscg=30200" style="display: flex; overflow: hidden; width: 145px; justify-content: flex-start; align-items: center;"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1653782400&h=bc3a755c4b724cbe09e03fdb58d7a072" alt="Download on the App Store" style="width: 145px;"></a>',
+                  }}
+                />
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      "<a href='https://play.google.com/store/apps/details?id=com.wadzoo&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1' style=\"display: flex; justify-content: flex-start; align-items: center; overflow: hidden; border-radius: 13px; width: 170px; height: 100px;\"><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' style=\"border-radius: 13px; width: 170px;\"/></a>",
+                  }}
+                />
+              </HStack>
             </Container>
           </PresenceTransition>
         </div>
@@ -276,7 +290,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   fontFamily: "Avenir-Black",
                 }}
               >
-                Try It!
+                Download Now!
               </h1>
               <h1
                 style={{
@@ -285,7 +299,8 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   color: theme.colors.muted["500"],
                 }}
               >
-                You can beta test Wadzoo before we launch!
+                Wadzoo is officially available for download on iOS and Android
+                devices!
               </h1>
               <div style={{ display: "flex" }}>
                 <Button
@@ -300,7 +315,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                 >
                   <HStack alignItems="center" space={2}>
                     <Text fontWeight={300} button>
-                      START TESTING
+                      Download
                     </Text>
                     <FaChevronRight size={12} color="white" />
                   </HStack>
