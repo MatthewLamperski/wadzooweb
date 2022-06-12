@@ -39,6 +39,7 @@ import AffiliatesDashboard from "./Views/AffiliatesDashboard/AffiliatesDashboard
 import UsersView from "./Views/AdminDashboard/UsersView";
 import UploadProperty from "./Routes/UploadProperty";
 import { FaChevronRight } from "react-icons/fa";
+import Introduction from "./Routes/Introduction";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -178,6 +179,12 @@ function App() {
               path="/uploadProperty"
               element={
                 <UploadProperty setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
+              path="/intro"
+              element={
+                <Introduction setNavbarTransparent={setNavbarTransparent} />
               }
             />
             <Route
