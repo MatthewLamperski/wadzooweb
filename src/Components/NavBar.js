@@ -41,7 +41,7 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
     >
       <Container fluid>
         <Navbar.Brand
-          style={{ padding: 5 }}
+          style={{ padding: 5, cursor: "pointer" }}
           onClick={() => {
             setShow(false);
             navigate("/");
@@ -66,6 +66,7 @@ const NavBar = ({ navbarTransparent, setNavbarTransparent, navbarHidden }) => {
           <Offcanvas.Header closeButton>
             <Offcanvas.Title>
               <Image
+                style={{ cursor: "pointer" }}
                 onClick={() => {
                   setShow(false);
                   navigate("/");

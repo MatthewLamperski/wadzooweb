@@ -213,7 +213,49 @@ const LandingPage = ({ setNavbarTransparent }) => {
           <div style={{ ...styles.triangle }} />
         </div>
       </ParallaxBanner>
-      <div ref={bodyRef}>
+      <div
+        style={{
+          backgroundColor: theme.colors.light["50"],
+        }}
+        ref={bodyRef}
+      >
+        <Container>
+          <div
+            style={{
+              padding: 20,
+              backgroundColor: theme.colors.light["50"],
+            }}
+          >
+            <Text fontSize={25} fontWeight={300}>
+              Now Introducing: Wadzoo
+            </Text>
+            <div
+              style={{
+                position: "relative",
+                paddingBottom: "56.25%",
+                overflow: "hidden",
+              }}
+            >
+              <iframe
+                style={{
+                  overflow: "hidden",
+                  border: 0,
+                  alignSelf: "center",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                }}
+                src="https://www.youtube.com/embed/1eDOkd6IPKY"
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </Container>
         <Row
           style={{
             width: "100%",

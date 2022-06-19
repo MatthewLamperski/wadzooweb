@@ -40,7 +40,7 @@ const Footer = () => {
                 }}
                 onClick={() => navigate("/download")}
               >
-                Beta Test
+                Download
               </a>
             </VStack>
           </Col>
