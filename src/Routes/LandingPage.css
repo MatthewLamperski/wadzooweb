@@ -4,7 +4,76 @@
     animation-direction: alternate;
     animation-duration: 1s;
 }
+
 @keyframes upanddown {
-    from {transform: translateY(0px);}
-    to {transform: translateY(5px)}
+    from {
+        transform: translateY(0px);
+    }
+    to {
+        transform: translateY(5px)
+    }
 }
+
+#appear {
+    animation-name: fadeInOpacity;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    animation-duration: 1.5s;
+}
+
+#appear2 {
+    animation-name: fadeInOpacity2;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    animation-duration: 3s;
+}
+
+#appear3 {
+    animation-name: fadeInOpacity2;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    animation-duration: 4s;
+}
+
+@keyframes fadeInOpacity {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+@keyframes fadeInOpacity2 {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    10% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+@keyframes fadeInOpacity3 {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    10% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+

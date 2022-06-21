@@ -2,13 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { ParallaxBanner } from "react-scroll-parallax";
 import "./LandingPage.css";
-import {
-  Button,
-  HStack,
-  PresenceTransition,
-  Text,
-  useTheme,
-} from "native-base";
+import { Button, HStack, Text, useTheme } from "native-base";
 import { Col, Container, Image, Row } from "react-bootstrap";
 import HousesVideo from "../Assets/houses.mp4";
 import HousesCover from "../Assets/HousesCover.png";
@@ -111,35 +105,32 @@ const LandingPage = ({ setNavbarTransparent }) => {
             backgroundColor: "#00000060",
           }}
         >
-          <PresenceTransition
-            visible={true}
-            initial={{ opacity: 0, translateY: 50 }}
-            animate={{
-              opacity: 1,
-              transition: { duration: 500 },
-            }}
-            style={{ flex: 1, paddingHorizontal: "15px" }}
-          >
-            <Container className="my-auto">
-              <h1
+          <Container className="my-auto">
+            <h1
+              id="appear"
+              style={{
+                fontSize: "8vw",
+                color: "white",
+                fontFamily: "Avenir-Black",
+                background:
+                  "linear-gradient(-225deg, #51f852, #81fa82, #7aebff, #48e1ff)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Connecting Investors Better.
+            </h1>
+            <div id="appear2" style={{ padding: 2 }}>
+              <h4
                 style={{
-                  fontSize: "3.5rem",
-                  color: theme.colors.primary["400"],
-                  fontFamily: "Avenir-Black",
+                  color: theme.colors.secondary["50"],
+                  fontFamily: "Avenir-Heavy",
                 }}
               >
-                Connecting Investors Better.
-              </h1>
-              <div style={{ padding: 2 }}>
-                <h4
-                  style={{
-                    color: theme.colors.secondary["50"],
-                    fontFamily: "Avenir-Heavy",
-                  }}
-                >
-                  Expand your network. Find exclusive off-market listings.
-                </h4>
-              </div>
+                Expand your network. Find exclusive off-market listings.
+              </h4>
+            </div>
+            <div id="appear3">
               <div style={{ display: "flex", px: "auto" }}>
                 <Button
                   size="sm"
@@ -204,8 +195,8 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   }}
                 />
               </HStack>
-            </Container>
-          </PresenceTransition>
+            </div>
+          </Container>
         </div>
         <div
           style={{ ...styles.triangleContainer, backgroundColor: "#00000060" }}
