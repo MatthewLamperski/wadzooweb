@@ -20,6 +20,14 @@ import { AppContext } from "../../AppContext";
 import { FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AddCompanyLogo from "../DataEntryDashboard/AddCompanyLogo";
+import {
+  collection,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { db } from "../../App";
 
 const UsersView = () => {
   const { setError } = useContext(AppContext);
@@ -161,6 +169,47 @@ const UsersView = () => {
       ) : (
         <Text>Search for user and you can manage them here.</Text>
       )}
+      <Box p={4}>
+        <Text>Upload .csv of users</Text>
+        <input
+          type="file"
+          onChange={({ target: { files } }) => {
+            let file = files[0];
+            let blob = file.slice(0, file.size, file.type);
+
+            let reader = new FileReader();
+            reader.readAsText(blob);
+            reader.onload = ({ target: { result } }) => {
+              let rows = result.split("\n");
+              rows.shift();
+              let newUsers = rows.map((row) => ({
+                firstName: row.split(",")[0],
+                lastName: row.split(",")[1],
+                email: row.split(",")[2].slice(0, -1),
+              }));
+              newUsers.forEach((newUser) => {
+                let q = query(
+                  collection(db, "users"),
+                  where("email", "==", newUser.email)
+                );
+                getDocs(q)
+                  .then((newUserSnapshot) => {
+                    if (newUserSnapshot.empty) {
+                      console.log("No user with email", newUser.email);
+                    } else {
+                      updateDoc(newUserSnapshot.docs[0].ref, {
+                        activeProducts: ["pro_monthly"],
+                      }).then(() => {
+                        console.log("Successfully upgraded to Pro");
+                      });
+                    }
+                  })
+                  .catch((err) => console.log(err));
+              });
+            };
+          }}
+        />
+      </Box>
       <Modal
         isOpen={showUpdateProfilePic}
         onClose={() => setShowUpdateProfilePic(false)}

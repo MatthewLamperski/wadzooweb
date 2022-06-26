@@ -188,6 +188,10 @@ const CreateListing = ({ setNavbarTransparent }) => {
               after: true,
               environment: "production",
               fullAddress: `${listing.address.trim()}, ${listing.city.trim()} ${listing.state.trim()} ${listing.zipCode.trim()}`,
+              _geoloc: {
+                lat,
+                lng,
+              },
               geohash,
               lat,
               lng,

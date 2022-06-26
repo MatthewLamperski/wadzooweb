@@ -633,11 +633,12 @@ exports.sendMessageNotification = functions.firestore
           change.after.data()
       );
       const messagingName = change.after.data().displayName;
-      const lastMessageText = change.after.data().text;
+      const lastMessageText = change.after.data().text ?
+      change.after.data().text :
+      change.after.data().data ?
+      "Sent you a property" :
+      "Sent you a message";
       const outgoing = change.after.data().outgoing;
-      const profilePicURL = change.after.data().profilePicURL ?
-      change.after.data().profilePicURL :
-      "none";
       if (!outgoing) {
         admin
             .firestore()
@@ -647,29 +648,26 @@ exports.sendMessageNotification = functions.firestore
               const data = doc.data();
               if ("notificationToken" in data) {
                 const token = data.notificationToken.token;
-                const payload = {
-                  notification: {
-                    title: messagingName,
-                    body: lastMessageText,
-                    sound: "default",
-                  },
-                  data: {
-                    type: "message",
-                    profilePicURL: profilePicURL,
-                  },
-                };
                 admin
                     .messaging()
-                    .sendToDevice(token, payload)
-                    .then((value) => {
-                      functions.logger.log(
-                          "Successfully sent user notification",
-                          value
-                      );
+                    .sendMulticast({
+                      tokens: [token],
+                      data: {
+                        notifee: JSON.stringify({
+                          body: lastMessageText,
+                          title: messagingName,
+                          android: {
+                            channelId: "default",
+                          },
+                          id: "message",
+                          link: `applinks://message/${context.params.messagingUID}`,
+                        }),
+                      },
                     })
-                    .catch((err) => {
-                      functions.logger.log("Error sending notification", err);
-                    });
+                    .then((res) =>
+                    // eslint-disable-next-line max-len
+                      functions.logger.log("Notification successfully sent", res)
+                    );
               } else {
                 functions.logger.log("No notificationToken Obj in user doc");
               }

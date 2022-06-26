@@ -125,6 +125,10 @@ const UploadProperty = ({ setNavbarTransparent }) => {
               environment: "production",
               fullAddress: `${listing.address.trim()}, ${listing.city.trim()} ${listing.state.trim()} ${listing.zipCode.trim()}`,
               geohash,
+              _geoloc: {
+                lat,
+                lng,
+              },
               lat,
               lng,
               created: listing.created
