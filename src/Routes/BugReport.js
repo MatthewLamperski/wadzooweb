@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Col, Container, Image, Row } from "react-bootstrap";
+import { Container, Image } from "react-bootstrap";
 import { useTheme } from "native-base";
 import LogoBlack from "../Assets/LogoLongBlack.png";
+import ReachOut from "../Components/ReachOut";
 
 const BugReport = ({ setNavbarTransparent }) => {
   const [navbarHeight, setnavbarHeight] = useState();
@@ -15,54 +16,37 @@ const BugReport = ({ setNavbarTransparent }) => {
   return (
     <div
       style={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        ...styles.container,
         paddingTop: navbarHeight,
       }}
     >
-      <Container
-        style={{
-          height: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          display: "flex",
-        }}
-      >
-        <Row style={{ width: "100%" }}>
-          <Col className="d-flex flex-column align-items-start">
-            <div className="my-4">
-              <Image src={LogoBlack} style={{ height: 75, width: "auto" }} />
-            </div>
-            <h1
-              style={{
-                color: theme.colors.secondary["800"],
-                fontFamily: "Avenir-Black",
-              }}
-            >
-              This link is still under construction...
-            </h1>
-            <h3
-              className="py-3"
-              style={{
-                color: theme.colors.muted["400"],
-                fontFamily: "Avenir-Heavy",
-              }}
-            >
-              For now, you can contact us{" "}
-              <a
-                style={{ color: theme.colors.primary["500"] }}
-                href="mailto:matthew@wadzoo.com?subject=Inquiry About Wadzoo"
-              >
-                here.
-              </a>
-            </h3>
-          </Col>
-        </Row>
+      <Container className="p-4">
+        <div
+          className="mb-4"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Image src={LogoBlack} style={{ height: 100, width: "auto" }} />
+        </div>
+        <ReachOut
+          textAreaTitle="Please explain the bug you encountered."
+          title="Found a bug?"
+          subtitle="Describe it here and we will get back to you as soon as possible. Thank you for bringing this to our attention!"
+          source="CONTACTUS PAGE"
+          textAreaPlaceholder="Describe bug"
+        />
       </Container>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+  },
 };
 
 export default BugReport;

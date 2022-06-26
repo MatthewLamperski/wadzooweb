@@ -736,3 +736,117 @@ exports.testSendDataMessage = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+exports.addGeolocToUsers = functions.firestore
+    .document("users/{uid}")
+    .onCreate((snap, context) => {
+      if (!("_geoloc" in snap.data())) {
+        if ("location" in snap.data()) {
+          if ("lat" in snap.data().location && "lng" in snap.data().location) {
+            snap.ref
+                .update({
+                  _geoloc: {
+                    lat: snap.data().lat,
+                    lng: snap.data().lng,
+                  },
+                })
+                .then(() => {
+                  functions.logger.log("Added _geoloc");
+                  return true;
+                })
+                .catch((err) => {
+                  functions.logger.error(
+                      "Could not add _geoloc to user",
+                      context.params.uid
+                  );
+                  return false;
+                });
+          } else {
+            functions.logger.error(
+                "Could not add _geoloc to user",
+                context.params.uid
+            );
+            return false;
+          }
+        } else {
+          functions.logger.error("No location obj in user", context.params.uid);
+        }
+      } else {
+        functions.logger.log("_geoloc already in user", context.params.uid);
+        return true;
+      }
+    });
+
+exports.addGeolocToProperties = functions.firestore
+    .document("listings/{docID}")
+    .onCreate((snap, context) => {
+      if (!("_geoloc" in snap.data())) {
+        if ("lat" in snap.data() && "lng" in snap.data()) {
+          snap.ref
+              .update({
+                _geoloc: {
+                  lat: snap.data().lat,
+                  lng: snap.data().lng,
+                },
+              })
+              .then(() => {
+                functions.logger.log("Added _geoloc", context.params.docID);
+                return true;
+              })
+              .catch((err) => {
+                functions.logger.error(
+                    "Could not add _geoloc to properties",
+                    context.params.docID
+                );
+                return false;
+              });
+        } else {
+          functions.logger.error(
+              "Could not add _geoloc to properties1",
+              context.params.docID
+          );
+          return false;
+        }
+      } else {
+      // eslint-disable-next-line max-len
+        functions.logger.log("_geoloc already in property", context.params.docID);
+        return true;
+      }
+    });
+
+exports.addGeolocToPosts = functions.firestore
+    .document("posts/{docID}")
+    .onCreate((snap, context) => {
+      functions.logger.log("Updating posts with _geoloc");
+      if (!("_geoloc" in snap.data())) {
+        if ("lat" in snap.data() && "lng" in snap.data()) {
+          snap.ref
+              .update({
+                _geoloc: {
+                  lat: snap.data().lat,
+                  lng: snap.data().lng,
+                },
+              })
+              .then(() => {
+                functions.logger.log("Added _geoloc", context.params.docID);
+                return true;
+              })
+              .catch((err) => {
+                functions.logger.error(
+                    "Could not add _geoloc to posts",
+                    context.params.docID
+                );
+                return false;
+              });
+        } else {
+          functions.logger.error(
+              "Could not add _geoloc to posts1",
+              context.params.docID
+          );
+          return false;
+        }
+      } else {
+        functions.logger.log("_geoloc already in post", context.params.docID);
+        return true;
+      }
+    });

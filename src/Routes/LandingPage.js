@@ -112,8 +112,7 @@ const LandingPage = ({ setNavbarTransparent }) => {
                 fontSize: "8vw",
                 color: "white",
                 fontFamily: "Avenir-Black",
-                background:
-                  "linear-gradient(-225deg, #51f852, #81fa82, #7aebff, #48e1ff)",
+                background: "linear-gradient(-225deg, #39F739, #09f195)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}

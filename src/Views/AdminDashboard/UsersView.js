@@ -210,6 +210,32 @@ const UsersView = () => {
           }}
         />
       </Box>
+      {/*<Box p={4}>*/}
+      {/*  <Text>Refresh properties</Text>*/}
+      {/*  <Button*/}
+      {/*    onPress={() => {*/}
+      {/*      let q = query(collection(db, "posts"));*/}
+      {/*      getDocs(q).then((querySnapshot) => {*/}
+      {/*        querySnapshot.forEach((userDoc) => {*/}
+      {/*          if (!("_geoloc" in userDoc.data())) {*/}
+      {/*            if ("lat" in userDoc.data() && "lng" in userDoc.data()) {*/}
+      {/*              updateDoc(userDoc.ref, {*/}
+      {/*                _geoloc: {*/}
+      {/*                  lat: userDoc.data().lat,*/}
+      {/*                  lng: userDoc.data().lng,*/}
+      {/*                },*/}
+      {/*              }).then(() => console.log("Successfully added _geoloc"));*/}
+      {/*            }*/}
+      {/*          } else {*/}
+      {/*            console.log("Already in post");*/}
+      {/*          }*/}
+      {/*        });*/}
+      {/*      });*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    Update*/}
+      {/*  </Button>*/}
+      {/*</Box>*/}
       <Modal
         isOpen={showUpdateProfilePic}
         onClose={() => setShowUpdateProfilePic(false)}

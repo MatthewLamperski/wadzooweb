@@ -40,6 +40,7 @@ import UsersView from "./Views/AdminDashboard/UsersView";
 import UploadProperty from "./Routes/UploadProperty";
 import { FaChevronRight } from "react-icons/fa";
 import Introduction from "./Routes/Introduction";
+import Faquestions from "./Routes/Faq";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
@@ -191,6 +192,12 @@ function App() {
               path="/createListing"
               element={
                 <CreateListing setNavbarTransparent={setNavbarTransparent} />
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <Faquestions setNavbarTransparent={setNavbarTransparent} />
               }
             />
             <Route
