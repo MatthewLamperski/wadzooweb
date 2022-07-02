@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const axios = require("axios");
 const {Configuration, PlaidEnvironments, PlaidApi} = require("plaid");
 const cors = require("cors")({origin: true});
 require("dotenv").config();
@@ -746,8 +747,8 @@ exports.addGeolocToUsers = functions.firestore
             snap.ref
                 .update({
                   _geoloc: {
-                    lat: snap.data().lat,
-                    lng: snap.data().lng,
+                    lat: snap.data().location.lat,
+                    lng: snap.data().location.lng,
                   },
                 })
                 .then(() => {
@@ -848,5 +849,109 @@ exports.addGeolocToPosts = functions.firestore
       } else {
         functions.logger.log("_geoloc already in post", context.params.docID);
         return true;
+      }
+    });
+
+exports.notifyAffiliates = functions.firestore
+    .document("promoCodes/{codeDocID}")
+    .onUpdate((change, context) => {
+      functions.logger.log("Updated affiliateDoc:", context.params.codeDocID);
+      // Check for notifyAffiliates, notifyAccordingly, always notify Matthew
+      const b4TotalPurchases =
+      "totalPurchases" in change.before.data() ?
+        Number(change.before.data().totalPurchases) :
+        0;
+      // eslint-disable-next-line max-len
+      const afterTotalPurchases = Number(change.after.data().totalPurchases);
+      // eslint-disable-next-line max-len
+      const shouldSendNoty = afterTotalPurchases > b4TotalPurchases;
+      if (shouldSendNoty) {
+        admin
+            .firestore()
+            .doc("app/appInfo")
+            .get()
+            .then((docSnap) => {
+              if (docSnap.data().notifyAffiliates) {
+                // if we are supposed to notify, search for affiliate user doc
+                const data = {
+                  service_id: "wadzoo",
+                  template_id: "affiliate-code-used",
+                  user_id: "user_O8a39t79Xp7F45Kwvqx7L",
+                  template_params: {
+                    name:
+                  "displayName" in change.after.data() ?
+                    change.after.data().displayName :
+                    "Wadzoo Affiliate",
+                    code: change.after.data().promoCode,
+                    share: change.after.data().shareOfTotalPurchase,
+                    amt_earned: (
+                      Number(change.after.data().shareOfTotalPurchase) * 29.99
+                    ).toFixed(2),
+                    email: change.after.data().email,
+                  },
+                };
+                axios
+                    .post("https://api.emailjs.com/api/v1.0/email/send", {
+                      data: JSON.stringify(data),
+                      contentType: "application/json",
+                    })
+                    .then((res) => {
+                      functions.logger.log("Email sent with res:", res);
+                    })
+                    .catch((err) => {
+                      functions.logger.log("Email not sent, err: ", err);
+                    });
+                admin
+                    .firestore()
+                    .doc(`users/${change.after.data().user}`)
+                    .get()
+                    .then((userDoc) => {
+                      admin
+                          .firestore()
+                          .doc("users/aGMk6uiO7OPpaMbhKLR1qG3h5Xm2")
+                          .get()
+                          .then((maphDoc) => {
+                            // eslint-disable-next-line max-len
+                            const maphToken = maphDoc.data().notificationToken.token;
+                            // eslint-disable-next-line max-len
+                            if ("notificationToken" in userDoc.data()) {
+                              // eslint-disable-next-line max-len
+                              const token = userDoc.data().notificationToken.token;
+                              admin
+                                  .messaging()
+                                  .sendMulticast({
+                                    tokens: [token, maphToken],
+                                    data: {
+                                      notifee: JSON.stringify({
+                                        // eslint-disable-next-line max-len
+                                        body: "Your affiliate code was just used! An email will be sent shortly with more information.",
+                                        title: `Affiliate Code Used (${
+                                          change.after.data().promoCode
+                                        })`,
+                                        android: {
+                                          channelId: "default",
+                                        },
+                                      }),
+                                    },
+                                  })
+                                  .then((res) =>
+                                  // eslint-disable-next-line max-len
+                                    functions.logger.log(
+                                        "Notification successfully sent",
+                                        res
+                                    )
+                                  );
+                            } else {
+                              // eslint-disable-next-line max-len
+                              functions.logger.log(
+                                  "No notificationToken Obj in user doc"
+                              );
+                            }
+                          })
+                          .catch((err) => functions.logger.error(err));
+                    })
+                    .catch((err) => functions.logger.error(err));
+              }
+            });
       }
     });

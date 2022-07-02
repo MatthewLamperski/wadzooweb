@@ -88,7 +88,7 @@ const AddAffiliatePanel = () => {
               ...(underCurrentUser
                 ? {
                     parent: {
-                      uid: user.uid,
+                      uid: "Xp5osrasWmeKPe7ebs78A0Akh4r1",
                       share,
                     },
                   }
@@ -216,7 +216,7 @@ const AddAffiliatePanel = () => {
             _text={{ color: "black", fontSize: 14 }}
             onChange={(val) => setUnderCurrentUser(val)}
           >
-            Add affiliate underneath you.
+            Add affiliate underneath Larry.
           </Checkbox>
         </div>
       )}
@@ -225,7 +225,7 @@ const AddAffiliatePanel = () => {
           <Text>Percent Share</Text>
           <Text pb={2} pl={1} fontSize={12} color="muted.500">
             This is the percentage of profit that comes in from this code that
-            will go to the affiliate. The rest will go to you.
+            will go to the affiliate. The rest (until 50%) will go to Larry.
           </Text>
           <InputGroup>
             <Input

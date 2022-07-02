@@ -20,13 +20,7 @@ import { AppContext } from "../../AppContext";
 import { FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import AddCompanyLogo from "../DataEntryDashboard/AddCompanyLogo";
-import {
-  collection,
-  getDocs,
-  query,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../App";
 
 const UsersView = () => {
@@ -170,7 +164,7 @@ const UsersView = () => {
         <Text>Search for user and you can manage them here.</Text>
       )}
       <Box p={4}>
-        <Text>Upload .csv of users</Text>
+        <Text>Upload .csv of affiliates</Text>
         <input
           type="file"
           onChange={({ target: { files } }) => {
@@ -179,55 +173,170 @@ const UsersView = () => {
 
             let reader = new FileReader();
             reader.readAsText(blob);
-            reader.onload = ({ target: { result } }) => {
+            reader.onload = async ({ target: { result } }) => {
               let rows = result.split("\n");
               rows.shift();
-              let newUsers = rows.map((row) => ({
-                firstName: row.split(",")[0],
-                lastName: row.split(",")[1],
-                email: row.split(",")[2].slice(0, -1),
+              let newUsers = rows
+                .map((row) => ({
+                  firstName: row.split(",")[0],
+                  lastName: row.split(",")[1],
+                  email: row.split(",")[2].slice(0, -1),
+                }))
+                .filter((row) => row.email.includes("pip"));
+              let affiliates = [
+                ...newUsers.slice(
+                  0,
+                  newUsers
+                    .map((aff) => aff.firstName.toLowerCase())
+                    .indexOf("pip")
+                ),
+                ...newUsers.slice(
+                  newUsers
+                    .map((aff) => aff.firstName.toLowerCase())
+                    .indexOf("pip") + 1
+                ),
+              ];
+              affiliates.unshift(
+                newUsers[
+                  newUsers
+                    .map((aff) => aff.firstName.toLowerCase())
+                    .indexOf("pip")
+                ]
+              );
+
+              let q = query(
+                collection(db, "users"),
+                where(
+                  "email",
+                  "in",
+                  affiliates.map((aff) => aff.email)
+                )
+              );
+              let querySnapshot = await getDocs(q);
+
+              let users = querySnapshot.docs.map((doc) => ({
+                email: doc.data().email,
+                uid: doc.id,
               }));
-              newUsers.forEach((newUser) => {
-                let q = query(
-                  collection(db, "users"),
-                  where("email", "==", newUser.email)
-                );
-                getDocs(q)
-                  .then((newUserSnapshot) => {
-                    if (newUserSnapshot.empty) {
-                      console.log("No user with email", newUser.email);
-                    } else {
-                      updateDoc(newUserSnapshot.docs[0].ref, {
-                        activeProducts: ["pro_monthly"],
-                      }).then(() => {
-                        console.log("Successfully upgraded to Pro");
-                      });
-                    }
-                  })
-                  .catch((err) => console.log(err));
+              console.log(
+                querySnapshot.docs.map((doc) => ({
+                  docID: doc.id,
+                  ...doc.data(),
+                }))
+              );
+              affiliates.forEach((affiliate, idx) => {
+                affiliates[idx] = {
+                  ...affiliate,
+                  uid: users[
+                    users.map((user) => user.email).indexOf(affiliate.email)
+                  ].uid,
+                };
               });
+
+              let affiliateDocs = affiliates.map((aff, idx) => ({
+                promoCode: `PIPS${idx + 1}`,
+                user: aff.uid,
+                email: aff.email,
+                firstName: aff.firstName,
+                displayName: `${aff.firstName} ${aff.lastName}`,
+                totalPurchases: 0,
+                totalRevenue: 0,
+                ...(idx === 0
+                  ? {
+                      shareOfTotalPurchase: 40,
+                      parent: [
+                        {
+                          shareOfTotalPurchase: 10,
+                          displayName: "Larry Harbolt",
+                          uid: "Xp5osrasWmeKPe7ebs78A0Akh4r1",
+                        },
+                      ],
+                    }
+                  : {
+                      shareOfTotalPurchase: 20,
+                      parent: [
+                        {
+                          shareOfTotalPurchase: 20,
+                          displayName: "Pip Stehlik",
+                          uid: "6ahWfoOCU5Z1Y2jkXePQoSeJ1U52",
+                        },
+                        {
+                          shareOfTotalPurchase: 10,
+                          displayName: "Larry Harbolt",
+                          uid: "Xp5osrasWmeKPe7ebs78A0Akh4r1",
+                        },
+                      ],
+                    }),
+              }));
+
+              // affiliateDocs.forEach((affiliateDoc) => {
+              //   emailjs
+              //     .send(
+              //       "wadzoo",
+              //       "new-affiliate",
+              //       {
+              //         firstName: `${affiliateDoc.firstName}`,
+              //         code: `${affiliateDoc.promoCode}`,
+              //         percentage: `${affiliateDoc.shareOfTotalPurchase}`,
+              //         email: `${affiliateDoc.email}`,
+              //       },
+              //       "user_O8a39t79Xp7F45Kwvqx7L"
+              //     )
+              //     .then((result) => {
+              //       console.log("RES:", JSON.stringify(result));
+              //     })
+              //     .catch((err) => console.log(err));
+              // });
+
+              // newUsers.forEach((newUser) => {
+              //   let q = query(
+              //     collection(db, "users"),
+              //     where("email", "==", newUser.email)
+              //   );
+              //   getDocs(q)
+              //     .then((newUserSnapshot) => {
+              //       if (newUserSnapshot.empty) {
+              //         console.log("No user with email", newUser.email);
+              //       } else {
+              //         updateDoc(newUserSnapshot.docs[0].ref, {
+              //           activeProducts: ["pro_monthly"],
+              //         }).then(() => {
+              //           console.log("Successfully upgraded to Pro");
+              //         });
+              //       }
+              //     })
+              //     .catch((err) => console.log(err));
+              // });
             };
           }}
         />
       </Box>
       {/*<Box p={4}>*/}
-      {/*  <Text>Refresh properties</Text>*/}
+      {/*  <Text>Refresh Users</Text>*/}
       {/*  <Button*/}
       {/*    onPress={() => {*/}
-      {/*      let q = query(collection(db, "posts"));*/}
+      {/*      let q = query(collection(db, "users"));*/}
       {/*      getDocs(q).then((querySnapshot) => {*/}
       {/*        querySnapshot.forEach((userDoc) => {*/}
       {/*          if (!("_geoloc" in userDoc.data())) {*/}
-      {/*            if ("lat" in userDoc.data() && "lng" in userDoc.data()) {*/}
-      {/*              updateDoc(userDoc.ref, {*/}
-      {/*                _geoloc: {*/}
-      {/*                  lat: userDoc.data().lat,*/}
-      {/*                  lng: userDoc.data().lng,*/}
-      {/*                },*/}
-      {/*              }).then(() => console.log("Successfully added _geoloc"));*/}
+      {/*            if ("location" in userDoc.data()) {*/}
+      {/*              if (*/}
+      {/*                "lat" in userDoc.data().location &&*/}
+      {/*                "lng" in userDoc.data().location*/}
+      {/*              ) {*/}
+      {/*                updateDoc(userDoc.ref, {*/}
+      {/*                  _geoloc: {*/}
+      {/*                    lat: userDoc.data().location.lat,*/}
+      {/*                    lng: userDoc.data().location.lng,*/}
+      {/*                  },*/}
+      {/*                }).then(() => console.log("Successfully added _geoloc"));*/}
+      {/*              } else {*/}
+      {/*                console.log("lat/lng not in user doc.location");*/}
+      {/*              }*/}
+      {/*            } else {*/}
+      {/*              console.log("location not in doc");*/}
       {/*            }*/}
       {/*          } else {*/}
-      {/*            console.log("Already in post");*/}
       {/*          }*/}
       {/*        });*/}
       {/*      });*/}

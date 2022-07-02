@@ -12,6 +12,7 @@ import { FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import AppIcon from "../Assets/AppIcon.png";
 import "./Portal.css";
+import { getAppInfo } from "../FirebaseInterface";
 
 export const camelToWords = (text) => {
   const result = text.replace(/([A-Z])/g, " $1");
@@ -20,12 +21,17 @@ export const camelToWords = (text) => {
 const Portal = ({ setNavbarTransparent }) => {
   const { user } = useContext(AppContext);
   const [navbarHeight, setnavbarHeight] = useState();
+  const [numUsers, setNumUsers] = useState();
   const navigate = useNavigate();
   useEffect(() => {
     setNavbarTransparent(false);
     setnavbarHeight(
       document.getElementsByClassName("navbar").item(0).clientHeight
     );
+  }, []);
+
+  useEffect(() => {
+    getAppInfo().then((appInfo) => setNumUsers(appInfo.usersCount));
   }, []);
 
   const theme = useTheme();
@@ -62,14 +68,25 @@ const Portal = ({ setNavbarTransparent }) => {
               style={{
                 color: theme.colors.muted["500"],
                 fontFamily: "Avenir-Black",
+                textAlign: "left",
               }}
             >
               Your role is {user && camelToWords(user.role)}.
             </h3>
+            {user && user.role && numUsers && user.role.includes("admin") && (
+              <h6
+                style={{
+                  color: theme.colors.muted["500"],
+                  fontFamily: "Avenir-Black",
+                }}
+              >
+                Total number of users: {numUsers}
+              </h6>
+            )}
           </Container>
           <Container className="d-flex py-5 my-auto">
             <Row
-              className="justify-content-center justify-content-md-start"
+              className="justify-content-center justify-content-md-start mx-auto"
               style={styles.rowStyle}
             >
               {user.role.includes("admin") && (
