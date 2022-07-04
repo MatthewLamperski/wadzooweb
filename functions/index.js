@@ -633,7 +633,10 @@ exports.sendMessageNotification = functions.firestore
           "change.after.data()",
           change.after.data()
       );
-      const messagingName = change.after.data().displayName;
+      const messagingName =
+      "displayName" in change.after.data() ?
+        change.after.data().displayName :
+        "Wadzoo User";
       const lastMessageText = change.after.data().text ?
       change.after.data().text :
       change.after.data().data ?
@@ -955,3 +958,49 @@ exports.notifyAffiliates = functions.firestore
             });
       }
     });
+
+exports.sendNotyToEmail = functions.https.onRequest((req, res) =>
+  cors(req, res, () => {
+    if (req.method === "POST") {
+      const email = req.body.data.email;
+      // get notification token
+      admin
+          .firestore()
+          .collection("users")
+          .where("email", "==", email)
+          .get()
+          .then((querySnap) => {
+            if (querySnap.empty) {
+              res.send(`No user with email ${email}`);
+            } else {
+              if ("notificationToken" in querySnap.docs[0].data()) {
+                const token = querySnap.docs[0].data().notificationToken.token;
+                const notyMethod = req.body.data.notyMethod;
+                if (notyMethod === "multicast") {
+                  admin
+                      .messaging()
+                      .sendMulticast({
+                        tokens: [token],
+                        data: req.body.data.notificationPayload,
+                      })
+                      .then((result) => res.json(result))
+                      .catch((err) => res.json(err));
+                } else if (notyMethod === "sendToDevice") {
+                  admin
+                      .messaging()
+                      .sendToDevice(token, req.body.data.notificationPayload)
+                      .then((result) => res.json(result))
+                      .catch((err) => res.json(err));
+                }
+              } else {
+              // eslint-disable-next-line max-len
+                res.send(`No notificationToken for user ${querySnap.docs[0].id}`);
+              }
+            }
+          })
+          .catch((err) => res.json(err));
+    } else {
+      res.send(`Not allowed to ${req.method} at this endpoint.`);
+    }
+  })
+);

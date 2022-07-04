@@ -27,6 +27,10 @@
         "function": "helloWorld"
       },
       {
+        "source": "/api/notyByEmail",
+        "function": "sendNotyToEmail"
+      },
+      {
         "source": "/api/iaphub",
         "function": "iaphubSubscriptionNoty"
       },
