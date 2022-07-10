@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-import { ParallaxBanner } from "react-scroll-parallax";
 import "./LandingPage.css";
 import { Button, HStack, Text, useTheme } from "native-base";
 import { Col, Container, Image, Row } from "react-bootstrap";
-import HousesVideo from "../Assets/houses.mp4";
-import HousesCover from "../Assets/HousesCover.png";
 import Investors from "../Assets/Investors.png";
 import Map from "../Assets/Map.png";
-import VideoCover from "react-video-cover";
+import Houses from "../Assets/houses.mp4";
 import { useNavigate } from "react-router-dom";
 
 export const deviceType = () => {
@@ -61,51 +58,12 @@ const LandingPage = ({ setNavbarTransparent }) => {
   }, []);
   return (
     <div>
-      <ParallaxBanner
-        className="banner"
-        style={{
-          height: "110vh",
-        }}
-        layers={[
-          {
-            children: (
-              <div
-                style={{
-                  backgroundColor: theme.colors.primary["700"],
-                  height: "100%",
-                  width: "100%",
-                  overflow: "hidden",
-                }}
-              >
-                <VideoCover
-                  videoOptions={{
-                    src: HousesVideo,
-                    muted: true,
-                    autoPlay: true,
-                    loop: true,
-                    playsInline: true,
-                    poster: deviceType() === "android" ? HousesCover : null,
-                    style: {
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    },
-                  }}
-                />
-              </div>
-            ),
-            speed: 0,
-          },
-        ]}
-      >
-        <div
-          style={{
-            ...styles.titleContainer,
-            paddingTop: navbarHeight,
-            backgroundColor: "#00000060",
-          }}
-        >
-          <Container className="my-auto">
+      <video playsInline autoPlay muted loop id="bgvid">
+        <source src={Houses} type="video/mp4" />
+      </video>
+      <div style={{ backgroundColor: "#00000050", position: "relative" }}>
+        <Container style={{ minHeight: "100vh" }} className="d-flex banner">
+          <div className="my-auto">
             <h1
               id="appear"
               style={{
@@ -149,7 +107,11 @@ const LandingPage = ({ setNavbarTransparent }) => {
                   ml={2}
                   my={3}
                   variant="outline"
-                  _text={{ fontSize: 14, fontWeight: 300 }}
+                  _text={{
+                    fontSize: 14,
+                    fontWeight: 300,
+                    color: "primary.400",
+                  }}
                   style={{
                     paddingTop: 0,
                     paddingBottom: 0,
@@ -195,14 +157,9 @@ const LandingPage = ({ setNavbarTransparent }) => {
                 />
               </HStack>
             </div>
-          </Container>
-        </div>
-        <div
-          style={{ ...styles.triangleContainer, backgroundColor: "#00000060" }}
-        >
-          <div style={{ ...styles.triangle }} />
-        </div>
-      </ParallaxBanner>
+          </div>
+        </Container>
+      </div>
       <div
         style={{
           backgroundColor: theme.colors.light["50"],

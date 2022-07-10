@@ -836,3 +836,44 @@ export const uploadProfilePic = (uid, image) => {
       .catch((err) => reject(err));
   });
 };
+
+export const createListingLink = (docID, title, description, imageUrl) => {
+  return new Promise((resolve, reject) => {
+    fetch(
+      "https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyB5UoruQ6OdfX0wRYoiDkmktAqpUzJNN08",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dynamicLinkInfo: {
+            link: `https://wadzoo.com/listings/${docID}`,
+            domainUriPrefix: "https://app.wadzoo.com/app",
+            iosInfo: {
+              iosBundleId: "com.Wadzoo",
+              iosAppStoreId: "1605839076",
+              iosMinimumVersion: "1.0",
+            },
+            androidInfo: {
+              androidPackageName: "com.wadzoo",
+            },
+            socialMetaTagInfo: {
+              socialTitle: title,
+              socialDescription: description,
+              socialImageLink: imageUrl,
+            },
+          },
+          suffix: {
+            option: "SHORT",
+          },
+        }),
+      }
+    )
+      .then(async (res) => {
+        let json = await res.json();
+        resolve(json);
+      })
+      .catch((err) => reject(err));
+  });
+};
